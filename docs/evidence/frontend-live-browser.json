@@ -1,0 +1,41 @@
+{
+  "checkedAt": "2026-10-12T11:29:05.154Z",
+  "browser": "154.0.8037.0",
+  "mode": "real public RPC, read-only, no wallet",
+  "observations": [
+    {
+      "route": "front",
+      "content": "Advertisement\n\nYour coin on tomorrow's front page.\n\n2,000,000 SCOOP a day, next free day 2026-10-13. Book →",
+      "noHorizontalOverflow": true
+    },
+    {
+      "route": "book",
+      "content": "Price today\n2,000,000 SCOOP\nAt pool price\n≈ 5.602495 IMD\nWindow\n13 Oct to 11 Nov (UTC)",
+      "noHorizontalOverflow": true
+    },
+    {
+      "route": "trade",
+      "content": "You receive\n≈ 0.000002766 IMD\nMinimum\n0.000002738 IMD",
+      "noHorizontalOverflow": true
+    }
+  ],
+  "requests": [
+    {
+      "url": "https://ethereum-rpc.publicnode.com/",
+      "status": 200
+    },
+    {
+      "url": "https://ethereum-rpc.publicnode.com/",
+      "status": 200
+    },
+    {
+      "url": "https://ethereum-rpc.publicnode.com/",
+      "status": 200
+    },
+    {
+      "url": "https://ethereum-rpc.publicnode.com/",
+      "status": 200
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-10-12T11:17:23.269Z",
+  "rpcUrls": [
+    "https://ethereum-rpc.publicnode.com",
+    "https://eth.drpc.org"
+  ],
+  "readOnly": true,
+  "price": "2000000000000000000000000",
+  "currentDay": "20738",
+  "bookingWindow": [
+    "20739",
+    "20768"
+  ],
+  "pool": {
+    "slot": [
+      "132603597315840578450967303",
+      -127861,
+      0,
+      12500
+    ],
+    "virtualReserves": {
+      "currency0": "833777959599019830116793745",
+      "currency1": "2335618222664290137809"
+    }
+  },
+  "sellOneScoop": [
+    "2766231663473",
+    "37997"
+  ]
+}

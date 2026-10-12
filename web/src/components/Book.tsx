@@ -2,22 +2,24 @@ import { useMemo, useState } from 'react';
 import { usePublicClient, useReadContract, useReadContracts } from 'wagmi';
 import { type Address, zeroAddress } from 'viem';
 import { useAppConfig, useNow, useTxRunner, useWallet } from '../hooks';
-import { bookingWindow, dayHasEnded, dayHasStarted, dayIndex, dayToIso, longDate, shortDate, weekdayShort } from '../lib/days';
-import { fmtAmount, parseAmount, shortAddress, errorText } from '../lib/format';
+import { dayHasEnded, dayHasStarted, dayToIso, longDate, shortDate, weekdayShort } from '../lib/days';
+import { fmtAmount, fmtNumber, parseAmount, shortAddress } from '../lib/format';
 import { checksum, headlineError, linkError, tokenError, MAX_HEADLINE, MAX_LINK } from '../lib/validate';
 import { ERC20_ABI } from '../lib/swap';
 import { Steps } from './Steps';
-import type { Slot } from './Sponsored';
+import { AdPreview, type Slot } from './Sponsored';
+import { WalletBar } from './WalletBar';
+import { RetryNotice } from './Feedback';
+import { useBookingTerms, usePool } from '../market';
 
 export function Book() {
   const cfg = useAppConfig();
   const w = useWallet();
   const now = useNow();
-  const today = dayIndex(now);
-  const win = bookingWindow(today);
+  const { today, win, price, clockFallback, retry: retryTerms } = useBookingTerms();
+  const pool = usePool();
   const fp = cfg.frontPage;
 
-  const price = useReadContract({ address: fp.address, abi: fp.abi, functionName: 'price', chainId: cfg.chainId, query: { refetchInterval: 60_000, select: (d) => d as bigint } });
   const nextPrice = useReadContract({ address: fp.address, abi: fp.abi, functionName: 'nextPrice', chainId: cfg.chainId, query: { refetchInterval: 60_000, select: (d) => d as [bigint, bigint] } });
   const owner = useReadContract({ address: fp.address, abi: fp.abi, functionName: 'owner', chainId: cfg.chainId, query: { select: (d) => d as Address } });
   const pendingOwner = useReadContract({ address: fp.address, abi: fp.abi, functionName: 'pendingOwner', chainId: cfg.chainId, query: { select: (d) => d as Address } });
@@ -39,11 +41,12 @@ export function Book() {
     (slots.isSuccess && slots.data?.length === bookedDays.data.length && !slotsFailed));
   const retrying = bookedDays.isFetching || slots.isFetching;
   const retryBookings = async () => {
+    await retryTerms();
     await bookedDays.refetch();
     if ((bookedDays.data?.length ?? 0) > 0) await slots.refetch();
   };
   const listStatus = listsFailed
-    ? <div role="status"><p>Bookings unavailable. Try again.</p><button type="button" className="btn" disabled={retrying} onClick={() => void retryBookings()}>{retrying ? 'Retrying…' : 'Retry bookings'}</button></div>
+    ? <div role="status"><p>Could not reach Ethereum right now. Try again.</p><button type="button" className="btn" disabled={retrying} onClick={() => void retryBookings()}>{retrying ? 'Retrying…' : 'Retry bookings'}</button></div>
     : !listsReady ? <p role="status">Reading bookings…</p> : null;
   const slotList = useMemo(() => {
     const list: { day: number; slot: Slot }[] = [];
@@ -64,7 +67,6 @@ export function Book() {
   const formValid = listsReady && !tErr && !hErr && !lErr && !dayErr;
   const tx = useTxRunner();
   const publicClient = usePublicClient();
-  const [simError, setSimError] = useState<string | null>(null);
 
   const canTransact = w.canTransact;
   const needPrice = price.data ?? 0n;
@@ -73,8 +75,12 @@ export function Book() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched(true);
+    if (!formValid) {
+      const target = dayErr ? document.querySelector<HTMLButtonElement>('.day:enabled') : document.getElementById(tErr ? 'token' : hErr ? 'headline' : 'link');
+      target?.focus();
+      return;
+    }
     if (!formValid || !canTransact || !w.walletClient || !w.address || day === null || !publicClient) return;
-    setSimError(null);
     const tokenAddr = checksum(token) as Address;
     const amount = needPrice;
     const ok = await tx.run([
@@ -89,7 +95,7 @@ export function Book() {
           try {
             const { request } = await publicClient.simulateContract({ address: fp.address, abi: fp.abi, functionName: 'book', args: [BigInt(day), tokenAddr, headline, link], account: w.address! });
             return await w.walletClient!.writeContract(request);
-          } catch (err) { setSimError(errorText(err)); throw err; }
+          } catch (err) { throw err; }
         },
       },
     ]);
@@ -100,37 +106,38 @@ export function Book() {
   const burnable = slotList.filter((s) => dayHasEnded(s.day, now) && !s.slot.burned);
   const isOwner = !!w.address && !!owner.data && owner.data.toLowerCase() === w.address.toLowerCase();
   const isPending = !!w.address && !!pendingOwner.data && pendingOwner.data.toLowerCase() === w.address.toLowerCase();
-  const days = Array.from({ length: 30 }, (_, i) => win.first + i);
+  const days = Array.from({ length: win.last - win.first + 1 }, (_, i) => win.first + i);
 
   return (
     <>
       <section className="section" aria-labelledby="book-h">
         <h2 id="book-h">Book the front page</h2>
-        <div className="columns columns--main">
+        <div className="columns booking-intro">
           <div>
-            <p className="prose">Reserve one UTC day, up to 30 days ahead. Pay in SCOOP.</p>
+            <p className="prose">Reserve one UTC day. Pay in SCOOP. <a href="#/trade">Get SCOOP →</a></p>
             <details className="booking-rules"><summary>Booking and refund rules</summary><p>First come, first served. Payment is held by the contract. After the day ends, anyone can burn it. The owner can veto a booking before its day starts, refunding you in full.</p></details>
+          </div>
+          <div>
             <dl className="kv">
               <dt>Price today</dt><dd className="num">{price.isLoading ? 'reading…' : price.error ? 'unavailable' : `${fmtAmount(price.data)} SCOOP`}</dd>
               {nextPrice.data && nextPrice.data[1] > BigInt(today) && (<><dt>From {dayToIso(Number(nextPrice.data[1]))}</dt><dd className="num">{fmtAmount(nextPrice.data[0])} SCOOP</dd></>)}
+              <dt>At pool price</dt><dd className="num">{price.data !== undefined && pool.spot !== null ? `≈ ${fmtNumber(Number(price.data) / 1e18 * pool.spot)} IMD` : 'Reading…'}</dd>
               <dt>Window</dt><dd>{shortDate(win.first)} to {shortDate(win.last)} (UTC)</dd>
               {w.address && (<><dt>Your SCOOP</dt><dd className="num">{fmtAmount(balance.data)} SCOOP</dd></>)}
               {w.address && (<><dt>Approved</dt><dd className="num">{fmtAmount(allowance.data)} SCOOP</dd></>)}
             </dl>
           </div>
-          <div className="card">
-            {!w.isConnected && <p>Browse dates; connect a wallet to book.</p>}
-            {w.isConnected && !w.onChain && <p>Switch to {cfg.network?.name ?? `chain ${cfg.chainId}`} to book.</p>}
-            {w.onChain && !enough && balance.data !== undefined && <p>You hold {fmtAmount(balance.data)} SCOOP; a slot costs {fmtAmount(needPrice)} SCOOP. <a href="#/trade">Buy SCOOP</a>.</p>}
-            {w.onChain && enough && <p>Ready: approve, then book. Two wallet confirmations.</p>}
-          </div>
+
         </div>
 
+        {price.error && <RetryNotice retry={retryTerms} />}
+        {pool.error && <RetryNotice retry={pool.retry} />}
         <form onSubmit={(e) => void submit(e)} noValidate>
           <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
             <legend className="field" style={{ marginBottom: 0 }}><span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600 }}>Pick a day (UTC)</span></legend>
-            <p className="legend" role="status">Booked days are crossed out. {listsFailed ? 'Bookings unavailable. Try again.' : !listsReady ? 'Reading bookings…' : `${days.filter((d) => booked.has(d)).length} of 30 booked.`}</p>
+            <p className="legend" role="status">Booked days are crossed out. {listsFailed ? 'Could not reach Ethereum right now. Try again.' : !listsReady ? 'Reading bookings…' : `${days.filter((d) => booked.has(d)).length} of ${days.length} booked.`}</p>
             {listsFailed && <button type="button" className="btn" disabled={retrying} onClick={() => void retryBookings()}>{retrying ? 'Retrying…' : 'Retry bookings'}</button>}
+            {clockFallback && <p className="legend">Calendar uses the UTC clock while contract dates are unavailable.</p>}
             <ul className="calendar">
               {days.map((d) => (
                 <li key={d}>
@@ -142,6 +149,14 @@ export function Book() {
             </ul>
             {touched && dayErr && <p className="error" role="alert" style={{ fontFamily: 'var(--font-sans)', color: 'var(--red)' }}>{dayErr}</p>}
           </fieldset>
+          <div className="card booking-wallet">
+            <WalletBar />
+            {(balance.error || allowance.error) && <RetryNotice retry={() => Promise.all([balance.refetch(), allowance.refetch()])} />}
+            {!w.isConnected && <p>Browse dates; connect a wallet to book.</p>}
+            {w.isConnected && !w.onChain && <p>Switch to {cfg.network?.name ?? `chain ${cfg.chainId}`} to book.</p>}
+            {w.onChain && !enough && balance.data !== undefined && <p>You hold {fmtAmount(balance.data)} SCOOP; a slot costs {fmtAmount(needPrice)} SCOOP. <a href="#/trade">Buy SCOOP</a>.</p>}
+            {w.onChain && enough && <p>Ready: approve, then book. Two wallet confirmations.</p>}
+          </div>
           <div className="columns">
             <div className="field">
               <label htmlFor="token">Coin you are promoting (address)</label>
@@ -162,14 +177,14 @@ export function Book() {
               {touched && lErr && <span id="link-err" className="error">{lErr}</span>}
             </div>
           </div>
+          <AdPreview token={token} headline={headline} link={link} />
           <div className="row">
             <button type="submit" className="btn btn--accent" disabled={!canTransact || tx.running || !enough || price.data === undefined || !listsReady}>
               {tx.running ? 'Working…' : day !== null ? `Approve and book ${dayToIso(day)} for ${fmtAmount(needPrice)} SCOOP` : 'Approve and book'}
             </button>
             {tx.steps.length > 0 && !tx.running && <button type="button" className="btn" onClick={tx.reset}>Clear</button>}
           </div>
-          {simError && <p className="notice notice--error" role="alert">The booking would revert: {simError}</p>}
-          <Steps steps={tx.steps} error={tx.error && !simError ? tx.error : null} />
+          <Steps steps={tx.steps} error={tx.error} retry={tx.retry} />
         </form>
       </section>
 
@@ -177,7 +192,7 @@ export function Book() {
         <h2 id="mine-h">Days you booked</h2>
         {!w.address && <p>Connect a wallet to see your bookings.</p>}
         {w.address && listStatus}
-        {w.address && listsReady && mine.length === 0 && <p>No bookings from {shortAddress(w.address)} in the last 31 or next 30 days.</p>}
+        {w.address && listsReady && mine.length === 0 && <p>No bookings from {shortAddress(w.address)} in this booking window.</p>}
         {listsReady && mine.length > 0 && <BookingTable rows={mine} now={now} />}
       </section>
 
@@ -233,7 +248,7 @@ function BookingTable({ rows, now, burnable }: { rows: { day: number; slot: Slot
           })}
         </tbody>
       </table>
-      <Steps steps={tx.steps} error={tx.error} />
+      <Steps steps={tx.steps} error={tx.error} retry={tx.retry} />
     </div>
   );
 }
@@ -296,7 +311,7 @@ function OwnerPanel({ isOwner, isPending, pendingOwner, future, bookingsStatus, 
           </div>
         </>
       )}
-      <Steps steps={tx.steps} error={tx.error} />
+      <Steps steps={tx.steps} error={tx.error} retry={tx.retry} />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { loadConfig, type AppConfig } from './config';
 import { ConfigContext } from './hooks';
 import { App } from './App';
 import './styles.css';
+import { ErrorBoundary, RetryNotice } from './components/Feedback';
 
 const root = createRoot(document.getElementById('root')!);
 
@@ -20,6 +21,7 @@ function chainFrom(cfg: AppConfig) {
     rpcUrls: { default: { http: n?.rpcUrls ?? [] } },
     blockExplorers: n ? { default: { name: 'Explorer', url: n.explorer } } : undefined,
     testnet: n?.testnet ?? false,
+    contracts: { multicall3: { address: '0xcA11bde05977b3631167028862bE2a173976CA11' } },
   });
 }
 
@@ -31,7 +33,7 @@ async function boot() {
       chains: [chain],
       connectors: [injected()],
       multiInjectedProviderDiscovery: true,
-      transports: { [chain.id]: fallback((cfg.network?.rpcUrls ?? []).map((u) => http(u, { batch: true }))) },
+      transports: { [chain.id]: fallback([...new Set([...(cfg.network?.rpcUrls ?? []), 'https://rpc.flashbots.net', 'https://rpc.mevblocker.io'])].map((u) => http(u, { batch: { batchSize: 3 }, timeout: 8_000, retryCount: 0 })), { rank: false, retryCount: 1 }) },
     });
     const qc = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 1 } } });
     root.render(
@@ -39,19 +41,17 @@ async function boot() {
         <ConfigContext.Provider value={cfg}>
           <WagmiProvider config={wagmi}>
             <QueryClientProvider client={qc}>
-              <App />
+              <ErrorBoundary><App /></ErrorBoundary>
             </QueryClientProvider>
           </WagmiProvider>
         </ConfigContext.Provider>
       </StrictMode>,
     );
-  } catch (e) {
+  } catch {
     root.render(
       <main className="page">
         <h1>SCOOP</h1>
-        <p className="notice notice--error" role="alert">
-          The site could not load its deployment configuration: {(e as Error).message}
-        </p>
+        <RetryNotice message="This page could not load. Try again." retry={boot} />
       </main>,
     );
   }

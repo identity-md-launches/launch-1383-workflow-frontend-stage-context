@@ -1,7 +1,8 @@
+import { RetryNotice } from './Feedback';
 import type { Step } from '../hooks';
 import { useAppConfig } from '../hooks';
 
-export function Steps({ steps, error }: { steps: Step[]; error: string | null }) {
+export function Steps({ steps, error, retry }: { steps: Step[]; error: string | null; retry: () => unknown }) {
   const cfg = useAppConfig();
   if (steps.length === 0 && !error) return null;
   const mark: Record<Step['state'], string> = { idle: '○', pending: '…', mining: '⏳', done: '✓', error: '✕', skipped: '–' };
@@ -20,7 +21,7 @@ export function Steps({ steps, error }: { steps: Step[]; error: string | null })
           ))}
         </ol>
       )}
-      {error && <p className="notice notice--error" role="alert">{error}</p>}
+      {error && <RetryNotice message={error} retry={retry} />}
     </div>
   );
 }

@@ -48,7 +48,11 @@ export function WalletBar() {
         )}
       </div>
       <div className="row">
-        {!w.isConnected && checked && available.length === 0 && <span role="status">{NO_WALLET}</span>}
+        {!w.isConnected && checked && available.length === 0 && <div className="missing-wallet"><p role="status">{NO_WALLET}</p><div className="wallet-links" aria-label="Open in a wallet">
+          <a className="btn" href="https://metamask.app.link/dapp/scoop.sites.imd.fun">MetaMask</a>
+          <a className="btn" href="https://go.cb-w.com/dapp?cb_url=https%3A%2F%2Fscoop.sites.imd.fun">Coinbase Wallet</a>
+          <a className="btn" href="https://link.trustwallet.com/open_url?coin_id=60&url=https%3A%2F%2Fscoop.sites.imd.fun">Trust Wallet</a>
+        </div></div>}
         {!w.isConnected && !checked && <span>Checking for a wallet…</span>}
         {!w.isConnected && available.map((c) => (
           <div key={c.uid} className="row">

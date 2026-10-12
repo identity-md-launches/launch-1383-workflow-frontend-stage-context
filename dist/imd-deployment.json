@@ -28,24 +28,64 @@
       "sha256": "702c710dc796650c30440c30672581350a69bc795eece017c6ea492623b7fa9b"
     },
     {
-      "path": "assets/ccip-DtcUJZrp.js",
-      "sha256": "262a13bca357bdfbff01dff76aded75c0d2a45f3628fb5564b10a631acd09057"
+      "path": "assets/ccip-C7pnGRQo.js",
+      "sha256": "acc94a09f5659a3012dac4479631883d3084fb3f1b1f12a2e81032113cb47c4a"
     },
     {
-      "path": "assets/index-CuAlQVSS.css",
-      "sha256": "8250f2cfba33d59472661037cc814b577ec0ecf9e64d7f666c46b6c8c3f5cfd0"
+      "path": "assets/index-Cprx0C-1.js",
+      "sha256": "6d70e93d400fb172f802698efc84871a4b0207f041738dd7852bbe7e043bca2c"
     },
     {
-      "path": "assets/index-DbA8XvRu.js",
-      "sha256": "141019a87597d3be2154406bc24672600b9d2227aaac75c9ea5f0f6c6a0a34c4"
+      "path": "assets/index-efYROdzd.css",
+      "sha256": "3c475154c654c1710c1639e8dc925e050fd0d0312e905b8cdb18f0f3858e1485"
+    },
+    {
+      "path": "fonts/ibm-plex-mono-LICENSE.txt",
+      "sha256": "23b0a9d0c6d3f140a0b77e483c5cfa6bba574325ef5cb189ed9f2fec4884533f"
+    },
+    {
+      "path": "fonts/ibm-plex-mono-latin-400-normal.woff2",
+      "sha256": "08949f728dc52d528e69b1667d15c89a5686a4ee9a296ff90983985f99c380f7"
+    },
+    {
+      "path": "fonts/ibm-plex-mono-latin-600-normal.woff2",
+      "sha256": "0d1f0b8d0722224e32e9f28261bdc86c79115be73444ae5eceb73976a1bcdf83"
+    },
+    {
+      "path": "fonts/playfair-display-LICENSE.txt",
+      "sha256": "c052aafd2a71e90bcee6e69f475029d430a10d548c08ffcae350171f0e9668b1"
+    },
+    {
+      "path": "fonts/playfair-display-latin-900-normal.woff2",
+      "sha256": "2772c56b28bec10f310634732b0554dd6cced8ad0f723bbdf73f6abc53829ad0"
+    },
+    {
+      "path": "fonts/source-serif-4-LICENSE.txt",
+      "sha256": "18aabf190848725e2576eefb5c29ba06aac1029d02132252a7f312eac2e50cf3"
+    },
+    {
+      "path": "fonts/source-serif-4-latin-400-italic.woff2",
+      "sha256": "882b7c150c29f29d4f8daae6b8dcae8662aac7f28ca34b34615305154136ecfd"
+    },
+    {
+      "path": "fonts/source-serif-4-latin-400-normal.woff2",
+      "sha256": "02194deb92d3975dd30e11a3824a1f1db32b48c93654e60560cb81ce8e7b5f95"
+    },
+    {
+      "path": "fonts/source-serif-4-latin-600-normal.woff2",
+      "sha256": "f2b7e1cf1d277b7608231868135648f8ad8e2b58d8e97ca088bee15dc357bee7"
+    },
+    {
+      "path": "fonts/source-serif-4-latin-700-normal.woff2",
+      "sha256": "7691c51bc286a9014db0048277d2c3f2ad0a90b533dc8adfb16cb22a95390d39"
     },
     {
       "path": "index.html",
-      "sha256": "8a88ffbd7fe7779d4adc69686542a33edd523d8620f9efcd0873f65b80aa7e22"
+      "sha256": "b380fd5eea7fc7a6121e920a6c64251e3ea222a0b45ad338d3ed836a5af3bab3"
     },
     {
       "path": "issues/2026-10-12.json",
-      "sha256": "ca34d4fbf71e38afc6e7fb6166c8315900f19e26b13bf58317e5f7b32756736c"
+      "sha256": "193da7427712def8da9d6511a225f654387b9890bf34af3823afdd4e276a874c"
     },
     {
       "path": "issues/index.json",
@@ -53,7 +93,7 @@
     },
     {
       "path": "share-card.png",
-      "sha256": "a3dff07ca31fd3b105c1c109936f6523f65b375591d476f44b4bbf3befd80a04"
+      "sha256": "5a79c1b8adc1fbaa510721a02db5ef3284efe26ad68cf320ece17146fd03dca8"
     }
   ],
   "poolKey": {

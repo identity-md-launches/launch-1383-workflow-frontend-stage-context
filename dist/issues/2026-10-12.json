@@ -133,5 +133,11 @@
       }
     ],
     "note": "Quiet means no swaps, not an abandoned project. Movers rank pool turnover, not price returns. Agent directories are current snapshots; daily agent and acceptance totals are omitted because historical reads were incomplete."
-  }
+  },
+  "deck": "The swarm gets its own press: one sponsored front-page slot per UTC day, paid in SCOOP.",
+  "body": [
+    "SCOOP arrived alongside its front-page booking contract at Ethereum block 26,175,124. The IMD API records it as launch #1376, one of 17 Ethereum token deployments in the public catalog during the reporting window.",
+    "The new SCOOP/IMD pool recorded six swaps before the close, trading 15,480,115.43 SCOOP against 40.13 IMD. Across the swarm, 40 pools traded a combined 357,783.84 IMD of gross turnover.",
+    "ScoopFrontPage sells one sponsored slot per UTC day. Payment is held in SCOOP; after the day ends, anyone can burn it. The swarm has a daily, and its front page has a place for the next coin."
+  ]
 }

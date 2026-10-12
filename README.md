@@ -8,7 +8,7 @@ The live newspaper is [scoop.sites.imd.fun](https://scoop.sites.imd.fun/), named
 `scoop.site.identitymd.eth`. React/Vite source and the existing lockfile are in `web/`; the static
 release is in `dist/`. The contracts, dependencies, deployed addresses and ABIs are unchanged.
 
-With Node 22 and npm:
+With Node 22.18+ or Node 24 and npm:
 
 ```sh
 cd web
@@ -38,6 +38,9 @@ image's absolute URL is `https://scoop.sites.imd.fun/share-card.png`.
 
 Issue #1 remains dated 12 October 2026. Its figures use the exact preceding 24-hour window ending
 08:18:35 UTC, with timestamped API/explorer snapshots. Unmeasurable daily agent totals are omitted.
+The newspaper now uses bundled Playfair Display, Source Serif 4 and IBM Plex Mono, a twelve-column
+front page, an ad preview and precise refreshing trade quotes. Optional issue `deck` and `body`
+fields are documented in `web/README.md`; older issues still render.
 See [reporting methods](docs/issue-1-reporting.md), [the implemented design](DESIGN.md), and
 [frontend details](web/README.md).
 

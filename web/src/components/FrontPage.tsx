@@ -1,27 +1,22 @@
 import { useNow } from '../hooks';
 import { dayIndex, dayToIso } from '../lib/days';
+import { AT_PRESS, latestIssue } from '../lib/issues';
 import { Sponsored } from './Sponsored';
 import { IssueBody, useIssue, useIssueIndex } from './Issue';
+import { RetryNotice } from './Feedback';
 
 export function FrontPage() {
-  const now = useNow();
-  const today = dayIndex(now);
+  const today = dayIndex(useNow());
   const todayIso = dayToIso(today);
-  const { index, error: indexError } = useIssueIndex();
-  // Today's issue when there is one, otherwise the newest issue on file.
-  const chosen = index ? (index.find((e) => e.date === todayIso) ?? index[0] ?? null) : null;
-  const { issue, error } = useIssue(chosen?.date ?? null);
-  return (
-    <>
-      <Sponsored day={today} />
-      {indexError && <p className="notice notice--error" role="alert">Issue list unavailable: {indexError}</p>}
-      {index && !chosen && <p className="notice">No issue has been filed yet.</p>}
-      {chosen && chosen.date !== todayIso && (
-        <p className="notice">No issue filed for {todayIso} yet. Showing the latest, {chosen.date}.</p>
-      )}
-      {error && <p className="notice notice--error" role="alert">{error}</p>}
-      {issue && <IssueBody issue={issue} />}
-      {!issue && !error && chosen && <p className="legend">Loading issue…</p>}
-    </>
-  );
+  const { index, error: indexError, retry: retryIndex } = useIssueIndex();
+  const chosen = index ? latestIssue(index, todayIso) : null;
+  const { issue, error, retry } = useIssue(chosen?.date ?? null);
+  return <>
+    {indexError && <RetryNotice message="The issue list could not load. Try again." retry={retryIndex} />}
+    {index && !chosen && <p className="notice">Today's issue is at the press. Please check back soon.</p>}
+    {chosen && chosen.date !== todayIso && <p className="press-note" role="status">{AT_PRESS}</p>}
+    {error && <RetryNotice message="This issue could not load. Try again." retry={retry} />}
+    {issue && <IssueBody issue={issue} advertisement={<Sponsored day={today} />} />}
+    {!issue && !error && !indexError && <p className="legend">{chosen || !index ? 'Opening the paper…' : ''}</p>}
+  </>;
 }

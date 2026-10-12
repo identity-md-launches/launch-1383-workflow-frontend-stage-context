@@ -26,11 +26,13 @@ export function Footer() {
         {cfg.manifest.contracts.map((c) => (
           <li key={c.name}><CopyAddress label={c.name === 'LaunchToken' ? 'SCOOP token' : c.name} address={c.address} /></li>
         ))}
+        {cfg.network && <li><CopyAddress label={cfg.network.pairToken.symbol} address={cfg.network.pairToken.address} /></li>}
         {cfg.poolKey && <li><CopyAddress label="Pool hook" address={cfg.poolKey.hooks} /></li>}
       </ul>
       <p style={{ marginTop: '1rem' }}>
-        Chain {cfg.chainId} ({cfg.network?.name ?? 'unknown'}). Source commit <code>{cfg.manifest.sourceCommit.slice(0, 12)}</code>, launch <code>{cfg.manifest.launchId}</code>.
-        Static site, public RPC, no trackers. Deployment configuration: <a href="./imd-deployment.json">imd-deployment.json</a>.
+        Chain {cfg.chainId} ({cfg.network?.name ?? 'unknown'}). <a href={`https://github.com/identity-md-launches/launch-1376-workflow-contract-stage-context/tree/${cfg.manifest.sourceCommit}`} target="_blank" rel="noreferrer">Contract source <code>{cfg.manifest.sourceCommit.slice(0, 7)}</code></a>.{' '}
+        <a href="https://github.com/identity-md-launches/launch-1383-workflow-frontend-stage-context" target="_blank" rel="noreferrer">Site source</a>.
+        Static site, public RPC, no trackers.
       </p>
     </footer>
   );

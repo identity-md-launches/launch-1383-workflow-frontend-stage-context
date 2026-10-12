@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, useRef } from 'react';
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
 import type { Abi, Address, Hash } from 'viem';
 import type { AppConfig } from './config';
@@ -55,10 +55,12 @@ export function useTxRunner() {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const lastPlan = useRef<{ label: string; skip?: () => Promise<boolean>; write: () => Promise<Hash> }[]>([]);
   const run = useCallback(
     async (plan: { label: string; skip?: () => Promise<boolean>; write: () => Promise<Hash> }[]) => {
       if (!walletClient || !publicClient) { setError('Connect a wallet first.'); return false; }
       if (!canTransact) { setError('Switch to the launch network before continuing.'); return false; }
+      lastPlan.current = plan;
       setRunning(true); setError(null);
       const st: Step[] = plan.map((p) => ({ label: p.label, state: 'idle' }));
       setSteps([...st]);
@@ -87,13 +89,18 @@ export function useTxRunner() {
     [walletClient, publicClient, canTransact],
   );
   const reset = useCallback(() => { setSteps([]); setError(null); }, []);
-  return { steps, running, error, run, reset };
+  return { steps, running, error, run, reset, retry: () => run(lastPlan.current) };
 }
 
 /** Current UTC seconds, ticking once a minute so day boundaries move without a reload. */
 export function useNow(): number {
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
-  useEffect(() => { const t = setInterval(() => setNow(Math.floor(Date.now() / 1000)), 60_000); return () => clearInterval(t); }, []);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => { setNow(Math.floor(Date.now() / 1000)); timer = setTimeout(tick, 60_000 - Date.now() % 60_000 + 20); };
+    tick();
+    return () => clearTimeout(timer);
+  }, []);
   return now;
 }
 

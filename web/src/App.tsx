@@ -1,23 +1,26 @@
 import { useEffect } from 'react';
-import { useAppConfig, useHashRoute } from './hooks';
-import { WalletBar } from './components/WalletBar';
+import { useHashRoute, useNow } from './hooks';
+import { useIssueIndex } from './components/Issue';
+import { latestIssue } from './lib/issues';
 import { FrontPage } from './components/FrontPage';
 import { Archive, IssuePage } from './components/Archive';
 import { Book } from './components/Book';
 import { Trade } from './components/Trade';
 import { Footer } from './components/Footer';
-import { longDate, todayIndex } from './lib/days';
+import { longDate, dayIndex, dayToIso, isoToDay } from './lib/days';
 
 const NAV: { href: string; label: string; match: (r: string) => boolean }[] = [
-  { href: '#/', label: 'Front page', match: (r) => r === '/' || r.startsWith('/issue/') },
+  { href: '#/', label: 'Front', match: (r) => r === '/' || r.startsWith('/issue/') },
   { href: '#/archive', label: 'Archive', match: (r) => r === '/archive' },
-  { href: '#/book', label: 'Book the front page', match: (r) => r === '/book' },
-  { href: '#/trade', label: 'Buy & sell SCOOP', match: (r) => r === '/trade' },
+  { href: '#/book', label: 'Advertise', match: (r) => r === '/book' },
+  { href: '#/trade', label: 'Trade', match: (r) => r === '/trade' },
 ];
 
 export function App() {
-  const cfg = useAppConfig();
   const route = useHashRoute();
+  const today = dayIndex(useNow());
+  const { index } = useIssueIndex();
+  const edition = route.startsWith('/issue/') ? index?.find(i => i.date === route.slice(7)) : index && latestIssue(index, dayToIso(today));
   useEffect(() => {
     const main = document.getElementById('main');
     if (main && route !== '/') main.focus({ preventScroll: false });
@@ -40,19 +43,15 @@ export function App() {
         main?.scrollIntoView({ block: 'start' });
       }}>Skip to content</a>
       <header className="masthead">
-        <div className="masthead__ears">
-          <span>{longDate(todayIndex())}</span>
-          <span>{cfg.network?.name ?? `chain ${cfg.chainId}`} · {cfg.network?.testnet ? 'testnet' : 'mainnet'}</span>
-        </div>
         <h1 className="masthead__title"><a href="#/">SCOOP</a></h1>
         <p className="masthead__tag">The scoop on every IMD coin, written by the swarm</p>
+        <p className="masthead__folio">Vol. I · No. {edition?.number ?? '—'} · {longDate(edition ? isoToDay(edition.date) : today)} · Ethereum edition</p>
       </header>
       <nav className="nav" aria-label="Sections">
-        {NAV.map((n) => (
-          <a key={n.href} href={n.href} aria-current={n.match(route) ? 'page' : undefined}>{n.label}</a>
+        {NAV.map((n, i) => (
+          <a key={n.href} href={n.href} aria-current={n.match(route) ? 'page' : undefined}>{i > 0 && <span className="nav__dot" aria-hidden="true">·</span>}{n.label}</a>
         ))}
       </nav>
-      <WalletBar />
       <main id="main" tabIndex={-1}>{page}</main>
       <Footer />
     </div>

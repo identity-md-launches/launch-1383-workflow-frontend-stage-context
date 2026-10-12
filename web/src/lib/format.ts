@@ -6,7 +6,10 @@ export function fmtAmount(value: bigint | undefined, decimals = 18, maxFraction 
   const s = formatUnits(value, decimals);
   const [int, frac = ''] = s.split('.');
   const intFmt = int!.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  const f = frac.slice(0, maxFraction).replace(/0+$/, '');
+  // Show the first four significant fractional digits for tiny positive amounts.
+  const first = frac.search(/[1-9]/);
+  const precision = int === '0' && first >= 0 ? Math.max(maxFraction, first + 4) : maxFraction;
+  const f = frac.slice(0, precision).replace(/0+$/, '');
   return f ? `${intFmt}.${f}` : intFmt;
 }
 
@@ -41,14 +44,21 @@ export function applySlippage(amountOut: bigint, slippageBps: number): bigint {
 
 export const NO_WALLET = 'No wallet found. Open this site in a wallet browser or install a browser wallet.';
 
-/** Human readable error from a wallet / viem rejection. */
+/** Display-only pool figures: grouped digits, never exponent notation. */
+export function fmtNumber(value: number): string {
+  if (!Number.isFinite(value)) return '—';
+  return new Intl.NumberFormat('en-US', { maximumSignificantDigits: 7, useGrouping: true }).format(value);
+}
+export const NETWORK_ERROR = 'Could not reach Ethereum right now. Try again.';
+/** Only approved messages reach the interface; RPC and wallet internals stay private. */
 export function errorText(e: unknown): string {
-  if (!e) return 'Unknown error';
-  const any = e as { shortMessage?: string; message?: string; code?: number; cause?: unknown };
-  if (/provider.*not (found|available)|ProviderNotFound/i.test(any.shortMessage ?? any.message ?? '')) return NO_WALLET;
-  if (any.code === 4001 || /user rejected|user denied/i.test(any.shortMessage ?? any.message ?? '')) {
-    return 'You rejected the request in your wallet.';
+  const err = e as { shortMessage?: string; message?: string; code?: number; cause?: unknown } | null;
+  const message = err?.shortMessage ?? err?.message ?? '';
+  if (/provider.*not (found|available)|ProviderNotFound/i.test(message)) return NO_WALLET;
+  if (err?.code === 4001 || /user rejected|user denied/i.test(message)) return 'You rejected the request in your wallet.';
+  if (err?.cause && err.cause !== e) {
+    const nested = errorText(err.cause);
+    if (nested !== NETWORK_ERROR) return nested;
   }
-  const m = any.shortMessage ?? any.message ?? String(e);
-  return m.length > 300 ? m.slice(0, 300) + '…' : m;
+  return NETWORK_ERROR;
 }

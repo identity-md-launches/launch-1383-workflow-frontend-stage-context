@@ -1,5 +1,5 @@
 {
-  "testedAt": "2026-10-12T10:24:16.870Z",
+  "testedAt": "2026-10-12T11:39:12.677Z",
   "mode": "regression tests",
   "browser": "154.0.8037.0",
   "consoleErrors": [],
@@ -8,10 +8,10 @@
     {
       "name": "layout 390",
       "og": "https://scoop.sites.imd.fun/share-card.png",
-      "inputY": 518.6875,
-      "swapBottom": 798.6875,
-      "cardY": 416.6875,
-      "detailsY": 989.6875,
+      "inputY": 420.265625,
+      "swapBottom": 700.265625,
+      "cardY": 322.265625,
+      "detailsY": 1051.265625,
       "cardX": 16,
       "detailsX": 16,
       "connectors": [],
@@ -40,18 +40,56 @@
     {
       "name": "failed bookings 390",
       "enabled": 0,
-      "ledger": "Bookings on the books\n\nEvery booking in the window, past and future. Once a day has ended, anyone can send its held SCOOP to the burn address.\n\nBookings unavailable. Try again.\n\nRetry bookings",
-      "mine": "Days you booked\n\nBookings unavailable. Try again.\n\nRetry bookings"
+      "ledger": "Bookings on the books\n\nEvery booking in the window, past and future. Once a day has ended, anyone can send its held SCOOP to the burn address.\n\nCould not reach Ethereum right now. Try again.\n\nRetry bookings",
+      "mine": "Days you booked\n\nCould not reach Ethereum right now. Try again.\n\nRetry bookings"
+    },
+    {
+      "name": "layout 500",
+      "og": "https://scoop.sites.imd.fun/share-card.png",
+      "inputY": 445.6875,
+      "swapBottom": 725.6875,
+      "cardY": 347.6875,
+      "detailsY": 1030.1875,
+      "cardX": 16,
+      "detailsX": 16,
+      "connectors": [],
+      "overflow": false
+    },
+    {
+      "name": "skip trade 500",
+      "hash": "#/trade",
+      "amount": "1000000",
+      "focus": "main"
+    },
+    {
+      "name": "switch into Ethereum 500",
+      "status": "Connected: 0x1111…1111\nETHEREUM\nDisconnect"
+    },
+    {
+      "name": "slippage 100 500",
+      "enabled": false,
+      "minimum": "—"
+    },
+    {
+      "name": "switch away 500",
+      "status": "Connected: 0x1111…1111\nWRONG NETWORK\nSwitch to Ethereum\nDisconnect",
+      "swapEnabled": false
+    },
+    {
+      "name": "failed bookings 500",
+      "enabled": 0,
+      "ledger": "Bookings on the books\n\nEvery booking in the window, past and future. Once a day has ended, anyone can send its held SCOOP to the burn address.\n\nCould not reach Ethereum right now. Try again.\n\nRetry bookings",
+      "mine": "Days you booked\n\nCould not reach Ethereum right now. Try again.\n\nRetry bookings"
     },
     {
       "name": "layout 1440",
       "og": "https://scoop.sites.imd.fun/share-card.png",
-      "inputY": 500.6875,
-      "swapBottom": 786.6875,
-      "cardY": 398.6875,
-      "detailsY": 398.6875,
-      "cardX": 909.328125,
-      "detailsX": 176,
+      "inputY": 510.078125,
+      "swapBottom": 796.078125,
+      "cardY": 408.078125,
+      "detailsY": 408.078125,
+      "cardX": 736,
+      "detailsX": 112,
       "connectors": [],
       "overflow": false
     },
@@ -78,8 +116,8 @@
     {
       "name": "failed bookings 1440",
       "enabled": 0,
-      "ledger": "Bookings on the books\n\nEvery booking in the window, past and future. Once a day has ended, anyone can send its held SCOOP to the burn address.\n\nBookings unavailable. Try again.\n\nRetry bookings",
-      "mine": "Days you booked\n\nBookings unavailable. Try again.\n\nRetry bookings"
+      "ledger": "Bookings on the books\n\nEvery booking in the window, past and future. Once a day has ended, anyone can send its held SCOOP to the burn address.\n\nCould not reach Ethereum right now. Try again.\n\nRetry bookings",
+      "mine": "Days you booked\n\nCould not reach Ethereum right now. Try again.\n\nRetry bookings"
     },
     {
       "name": "loading",
@@ -118,20 +156,547 @@
       "passed": true
     },
     {
+      "name": "tiny sell, grouped pool rate, 20s refresh and pre-swap quote 390",
+      "passed": true
+    },
+    {
+      "name": "tiny sell, grouped pool rate, 20s refresh and pre-swap quote 500",
+      "passed": true
+    },
+    {
+      "name": "tiny sell, grouped pool rate, 20s refresh and pre-swap quote 1440",
+      "passed": true
+    },
+    {
+      "name": "wallet links and ad preview 390",
+      "passed": true
+    },
+    {
+      "name": "wallet links and ad preview 500",
+      "passed": true
+    },
+    {
+      "name": "wallet links and ad preview 1440",
+      "passed": true
+    },
+    {
+      "name": "contract calendar overrides the clock",
+      "passed": true
+    },
+    {
+      "name": "midnight at-press front page",
+      "passed": true
+    },
+    {
+      "name": "invalid index recovery",
+      "passed": true
+    },
+    {
+      "name": "invalid issue recovery",
+      "passed": true
+    },
+    {
+      "name": "RPC error sanitization and retry",
+      "passed": true
+    },
+    {
+      "name": "error boundary catches rendering failure and retries",
+      "passed": true,
+      "expectedConsoleErrors": 1
+    },
+    {
+      "name": "legacy issue without deck or body",
+      "passed": true
+    },
+    {
+      "name": "startup failure and retry",
+      "passed": true
+    },
+    {
+      "name": "invalid booking focuses the first field without signing",
+      "passed": true
+    },
+    {
+      "name": "page front 320",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 0,
+      "headlineY": 320.421875,
+      "leadY": 286.921875,
+      "numbersY": 1144.40625,
+      "graphicY": 1993.96875,
+      "grid": 1,
+      "gutter": "32px",
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "page trade 320",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 1,
+      "grid": null,
+      "gutter": null,
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "page book 320",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 1,
+      "grid": null,
+      "gutter": null,
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "page archive 320",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 0,
+      "grid": null,
+      "gutter": null,
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "page issue/2026-10-12 320",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 0,
+      "headlineY": 373.921875,
+      "leadY": 340.421875,
+      "numbersY": 1197.90625,
+      "graphicY": 2047.46875,
+      "grid": 1,
+      "gutter": "32px",
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
       "name": "responsive 320",
       "passed": true
     },
     {
+      "name": "page front 390",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 0,
+      "headlineY": 315.578125,
+      "leadY": 282.078125,
+      "numbersY": 1027.234375,
+      "graphicY": 1792.796875,
+      "grid": 1,
+      "gutter": "32px",
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "page trade 390",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 1,
+      "grid": null,
+      "gutter": null,
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
       "name": "first book action 390",
-      "bottom": 807.6875
+      "bottom": 654.765625
+    },
+    {
+      "name": "page book 390",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 1,
+      "grid": null,
+      "gutter": null,
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "page archive 390",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 0,
+      "grid": null,
+      "gutter": null,
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "page issue/2026-10-12 390",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 0,
+      "headlineY": 369.078125,
+      "leadY": 335.578125,
+      "numbersY": 1080.734375,
+      "graphicY": 1846.296875,
+      "grid": 1,
+      "gutter": "32px",
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
     },
     {
       "name": "responsive 390",
       "passed": true
     },
     {
-      "name": "responsive 768",
+      "name": "page front 500",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 0,
+      "headlineY": 341,
+      "leadY": 307.5,
+      "numbersY": 921.65625,
+      "graphicY": 1624.21875,
+      "grid": 1,
+      "gutter": "32px",
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "page trade 500",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 1,
+      "grid": null,
+      "gutter": null,
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "page book 500",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 1,
+      "grid": null,
+      "gutter": null,
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "page archive 500",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 0,
+      "grid": null,
+      "gutter": null,
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "page issue/2026-10-12 500",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 0,
+      "headlineY": 394.5,
+      "leadY": 361,
+      "numbersY": 975.15625,
+      "graphicY": 1677.71875,
+      "grid": 1,
+      "gutter": "32px",
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "responsive 500",
       "passed": true
+    },
+    {
+      "name": "page front 1024",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 0,
+      "headlineY": 393.390625,
+      "leadY": 359.890625,
+      "numbersY": 359.890625,
+      "graphicY": 947.734375,
+      "grid": 12,
+      "gutter": "32px",
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "page trade 1024",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 1,
+      "grid": null,
+      "gutter": null,
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "page book 1024",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 1,
+      "grid": null,
+      "gutter": null,
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "page archive 1024",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 0,
+      "grid": null,
+      "gutter": null,
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "page issue/2026-10-12 1024",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 0,
+      "headlineY": 446.890625,
+      "leadY": 413.390625,
+      "numbersY": 413.390625,
+      "graphicY": 1001.234375,
+      "grid": 12,
+      "gutter": "32px",
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "responsive 1024",
+      "passed": true
+    },
+    {
+      "name": "page front 1440",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 0,
+      "headlineY": 393.390625,
+      "leadY": 359.890625,
+      "numbersY": 359.890625,
+      "graphicY": 976.828125,
+      "grid": 12,
+      "gutter": "32px",
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "page trade 1440",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 1,
+      "grid": null,
+      "gutter": null,
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "page book 1440",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 1,
+      "grid": null,
+      "gutter": null,
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "page archive 1440",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 0,
+      "grid": null,
+      "gutter": null,
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono"
+      ]
+    },
+    {
+      "name": "page issue/2026-10-12 1440",
+      "navRows": 1,
+      "mainOutline": "none",
+      "wallets": 0,
+      "headlineY": 446.890625,
+      "leadY": 413.390625,
+      "numbersY": 413.390625,
+      "graphicY": 1030.328125,
+      "grid": 12,
+      "gutter": "32px",
+      "fonts": [
+        "Playfair Display",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "Source Serif 4",
+        "IBM Plex Mono",
+        "IBM Plex Mono"
+      ]
     },
     {
       "name": "responsive 1440",

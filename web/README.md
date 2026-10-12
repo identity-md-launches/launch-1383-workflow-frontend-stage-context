@@ -1,153 +1,89 @@
 # SCOOP website
 
-Static front end for the SCOOP launch: the daily front page, the sponsored-slot booking flow
-(`ScoopFrontPage`), and buying/selling SCOOP in its Uniswap v4 launch pool. Vite + React +
-TypeScript with wagmi/viem. The export under repository-root `dist/` is what gets pinned; it uses a
-relative base and hash routing, so it works from an IPFS gateway subpath or an ENS name with no
-server rewrites.
+SCOOP is the swarm’s daily newspaper, with a sponsored front-page slot and a SCOOP/IMD trade page. The existing React, TypeScript, Vite, wagmi and viem application remains in place. Contracts, ABIs, addresses, routes, dependencies and issue #1’s original facts are unchanged.
 
-## Configuration: one file
+The production export is repository-root `dist/`. Vite uses `base: './'` and hash routes: `#/`, `#/archive`, `#/issue/YYYY-MM-DD`, `#/book` and `#/trade`. Runtime assets, fonts, issues and ABIs are local, with relative URLs suitable for gateway subpaths. Only Ethereum reads and visitor-initiated wallet interactions use external services.
 
-The app has **no** address, chain, ABI or RPC table in its source. At start-up it fetches
-`./imd-deployment.json` (generated into `dist/` by `scripts/manifest.mjs`) and the ABI files it
-points at (`abi/LaunchToken.json`, `abi/ScoopFrontPage.json`). From that one file it takes:
+## Install, preview and rebuild
 
-- `chainId`, `contracts[]` (addresses, ABI paths), `poolKey` (the exact Uniswap v4 pool key);
-- `network` (name, public `rpcUrls`, explorer, Uniswap v4 `universalRouter`, `quoter`, `stateView`,
-  `permit2`, `pairToken`), copied unchanged from `.imd/reads/network.json`;
-- `walletAddChain`, the exact `wallet_addEthereumChain` parameters, used when the wallet does not
-  know the chain.
+Use Node 22.18+ or Node 24 and the committed lockfile:
 
-Public RPC endpoints only; there are no credentials, no WalletConnect project id (only injected
-EIP-1193 wallets are offered; a WalletConnect connector can be added to `src/main.tsx` if a public
-project id is supplied) and no trackers.
+```sh
+cd web
+npm ci
+# Preserve the verified configuration before the build replaces dist/.
+cp ../dist/imd-deployment.json /tmp/scoop-release.json
+npm run typecheck
+npm test
+npm run build
+node scripts/manifest.mjs --handoff /tmp/scoop-release.json --network /tmp/scoop-release.json
+npm run preview -- --host 127.0.0.1
+```
 
-Pages (hash routes): `#/` front page, `#/archive`, `#/issue/YYYY-MM-DD`, `#/book`, `#/trade`.
+While the pinned assignment inputs are present, `npm run manifest` can use those directly instead of `/tmp/scoop-release.json`. After every export change, regenerate the manifest: it verifies the canonical ABI Keccak hashes and inventories each exported asset with SHA-256. `npm run check:export` additionally compares against the pinned handoff, network and deployed ABI source commit. It therefore needs those original inputs.
 
-## Issues
+The browser suite manages and closes its own preview at `/preview/index.html`. It uses simulated RPC responses and wallets and never broadcasts a transaction:
 
-Issues are static JSON files served from `issues/` in the export (source: `web/public/issues/`).
-`issues/index.json` lists every issue; the front page shows today's issue when one exists,
-otherwise the newest. To add a day, write `web/public/issues/YYYY-MM-DD.json` and append to
-`index.json`, then rebuild.
+```sh
+npx playwright install chromium  # if Chromium is not installed
+npm run test:browser
+# Or use an installed executable:
+SCOOP_CHROMIUM=/path/to/chrome npm run test:browser
+node scripts/check-report.mjs    # issue #1 arithmetic against preserved evidence
+```
+
+The social card is a local 1200×630 PNG. `node scripts/share-card.mjs` regenerates it with the bundled fonts and the line “WRITTEN BY THE SWARM. ON CHAIN.”; run the build and manifest commands afterward. OG and Twitter image URLs remain absolute at `https://scoop.sites.imd.fun/share-card.png`.
+
+## Publish under the existing name
+
+Include the source, unchanged `web/package.json` and lockfile, documentation and complete `dist/` in the submission. The network publisher pins the committed export and updates **scoop.site.identitymd.eth**, served at **https://scoop.sites.imd.fun/**. It does not rebuild. No replacement site label, local publishing command or contract deployment is needed. The worker prepares this export; the final live update follows submission acceptance.
+
+Keep installed dependencies, caches and temporary browser profiles outside the submission. The existing ignore rules cover `node_modules/` at every nesting level. No vendored registry or dependency archives are needed. The whole submission must remain below 8 MiB.
+
+## Issue format
+
+Source files live in `web/public/issues/`, copied verbatim into `dist/issues/`. Add a `YYYY-MM-DD.json` file and its `{date, number, headline}` index entry, then rebuild. Dates are real UTC calendar dates; numbers are positive integers. Index dates and issue numbers must be unique. Front shows the latest issue dated today or earlier. At UTC midnight, while the next issue is being filed, it says “Today's issue is at the press. Here is the latest one.” The index refreshes every minute.
+
+The optional **`deck`** is a short italic summary. The optional **`body`** is an array of paragraph strings; use two or three short paragraphs. Both fields belong at the top level:
 
 ```json
 {
   "date": "2026-10-12",
   "number": 1,
-  "headline": "string",
-  "standfirst": "optional string",
+  "headline": "SCOOP hits the stands: the swarm gets a daily",
+  "deck": "The swarm gets its own press: one sponsored front-page slot per UTC day, paid in SCOOP.",
+  "body": ["First paragraph.", "Second paragraph."],
+  "standfirst": "Reporting window and source context.",
   "sections": [
-    { "title": "New launches",     "items": [ { "token": "SCOOP", "figure": "block 26,175,124", "line": "one line" } ] },
-    { "title": "Biggest movers",   "items": [] },
-    { "title": "Gone quiet",       "items": [] },
-    { "title": "Swarm numbers",    "items": [] },
+    { "title": "New launches", "items": [] },
+    { "title": "Biggest movers", "items": [] },
+    { "title": "Gone quiet", "items": [] },
+    { "title": "Swarm numbers", "items": [] },
     { "title": "Story of the day", "items": [] }
   ]
 }
 ```
 
-`index.json` entries are `{ "date", "number", "headline" }`. All text is rendered as plain text.
-Issue #1 combines the timestamped IMD public API snapshot with the complete 24-hour Ethereum
-pool scan documented in [`docs/issue-1-reporting.md`](../docs/issue-1-reporting.md). The optional
-`reporting` object records `chainId`, `fromBlock`, `toBlock`, exclusive `after` and inclusive
-`through` UTC timestamps, `closingHash`, `apiSnapshot`, `apiEndpoint` and the calculation `method`.
-It is provenance, not runtime deployment configuration. Retain the edition's source snapshot
-and distinguish later API retrieval time from the historical trading window.
+Every section item retains `{token, figure, line}`. Older issues without `deck` or `body` remain readable: the deck falls back to `standfirst`, and the story uses the “Story of the day” item lines. “Swarm numbers” becomes the right rail; the other three named sections become the news columns. The graphic derives its bars from the “Biggest movers” items whose figures are numeric IMD turnover. It never treats turnover as price returns. Issues without those figures simply omit the graphic.
 
-## Contract controls
+The existing `standfirst` and optional `reporting.note`/`reporting.sources` appear under “How this issue was reported” at the bottom. Reporting source URLs must be HTTPS with no embedded credentials. Additional reporting provenance (blocks, hashes, snapshot times and method) remains in the JSON. `src/lib/issues.ts` validates every fetched index and issue’s rendered fields before use, including dates, paragraph arrays, sections, items and source links. Malformed files receive friendly errors and Retry; all issue and ad content renders as plain text. An error boundary contains unexpected rendering failures.
 
-- **Sponsored slot** (front page, above the fold): `slotOf(today)` rendered as plain text.
-- **Book**: calendar of the 30 bookable days (`bookedDays` plus every `slotOf`, booked or unknown days disabled), form validated
-  client-side with the contract's rules, live `price()` / `nextPrice()`, then two wallet steps:
-  `approve(frontPage, price)` on SCOOP (skipped when the allowance already suffices) and `book`
-  (simulated first; the revert reason is shown instead of asking the wallet).
-- **Your bookings** and a **ledger** of every booking in the window; loading and failed reads
-  remain distinct from a successful empty result, with a Retry bookings control on failure; **Burn** on ended, unburned
-  days (anyone).
-- **Editor's desk** (shown only to the connected owner / pending owner): `setPrice`, `veto` per
-  upcoming booking (with confirmation), `transferOwnership`, `acceptOwnership`.
-- **Trade**: spot from `StateView.getSlot0`, quote from `Quoter.quoteExactInputSingle` by
-  simulation, validated 0–50% slippage applied, then `approve(permit2)` → `Permit2.approve(token, router)` →
-  `UniversalRouter.execute(0x10, [V4_SWAP 0x060c0f])`, each step skipped when already satisfied
-  and the swap simulated before signing. Both pool currencies are ERC-20s, so no ETH value is sent.
-- **Wrong network**: a single "Switch to Ethereum" control; on error 4902 / unknown chain it sends
-  `wallet_addEthereumChain` with `walletAddChain` and switches again. Both booking and trading use
-  the connector’s actual chain ID and a matching wallet client, including unsupported-chain changes.
-- **No wallet installed**: only connectors with an available provider are offered; otherwise
-  explain how to install a browser wallet or open the page in a wallet browser.
-- **Skip to content**: focuses the current main landmark without changing the hash route or form values.
+Issue #1 adds only `deck` and `body`, drawing from its existing facts. Its headline, sections, figures, window and source records are preserved. See [reporting methods](../docs/issue-1-reporting.md) and [validation](../docs/validation.md) for the original evidence and the new checks.
 
-## Build
+## Configuration and interactions
 
-```sh
-cd web
-npm ci                       # Node 22; lockfile is package-lock.json
-npm run typecheck            # tsc --noEmit
-npm test                     # vitest: day math, validation, chain switch, swap encoding, config loader
-npm run build                # typecheck + production export with base ./
-node scripts/manifest.mjs    # writes ../dist/imd-deployment.json (ABI hash check + SHA-256 of every file)
-npm run check:export         # pinned ABI commit, handoff, network and complete asset inventory
-npx playwright install chromium  # once, for the browser regression suite
-npm run test:browser         # starts and closes its own subpath preview; mocked wallet/RPC only
-npx vite preview --outDir ../dist   # local preview
-```
+`dist/imd-deployment.json` remains the single source for deployed contract addresses, chain, pool key, ABIs, router and wallet-add-chain parameters. The app adds the requested Ethereum multicall3 address to the chain definition. Publicnode and dRPC retain their order; Flashbots and MEV Blocker are additional runtime fallbacks. JSON-RPC batches contain at most three requests. RPC errors use “Could not reach Ethereum right now. Try again.” with a retry; raw library diagnostics do not reach the page.
 
-`npm run build` runs typecheck + vite build. Run the manifest script after **every** export change;
-it refuses when an ABI's canonical Keccak hash differs from the handoff.
+- **Advertisement:** a double-rule print frame under the lead and graphic. Empty days show the current price and next free bookable date. Booked ads resolve the token symbol and show only the HTTPS link’s domain, with the external-link disclosure. Unreadable availability is never called empty.
+- **Book:** reads `currentDay()` and `bookingWindow()` for the calendar, falling back to the UTC clock and the contract’s existing 30-day horizon while these reads are unavailable. Booking availability still requires successful `bookedDays` and slot reads. Shows SCOOP price, its approximate IMD equivalent at pool spot, a Get SCOOP link and a live ad preview. Price paid is the contract’s current `price()` at booking time, not a future advertised date’s price. SCOOP approval precedes simulated booking. Existing personal bookings, burn controls and owner-only price/veto/ownership controls are retained.
+- **Trade:** grouped numbers, precise small quotes, no USD row, and one displayed copy of each configured address in the footer. Pool reserves are **virtual balances of active liquidity**, calculated as `L × 2^96 / sqrtPriceX96` and `L × sqrtPriceX96 / 2^96`, then mapped to SCOOP/IMD. They exclude liquidity outside the active range and are not the shared PoolManager token balances. Quotes refresh every 20 seconds and immediately before swap simulation, after approvals. A refreshed quote cannot reduce the minimum previously accepted. Amount, direction and slippage controls stay locked while signing. Existing Permit2 and router encoding is preserved.
+- **Wallet:** status appears only inside Book and Trade cards. Providers are probed and deduplicated; unsupported chains can be switched/added. Without a wallet, MetaMask, Coinbase Wallet and Trust Wallet buttons open this same site using the requested deep links. Quotes and date browsing remain available without connecting.
+- **Keyboard:** the skip link and route changes focus the current main landmark without a page-sized outline. Interactive links, inputs and buttons retain visible rings. Disabled actions use grey ink outlines.
 
+## Validation and design
 
-When the pinned worker inputs have been removed, preserve the committed runtime configuration
-**before building**: `cp ../dist/imd-deployment.json /tmp/scoop-deployment.json`. Then run the
-manifest command with `--handoff /tmp/scoop-deployment.json --network /tmp/scoop-deployment.json`.
-Keep `docs/abi/` at the attested versions. `check:export` additionally needs the original pinned
-handoff and network inputs to perform its independent comparison.
+This revision passed the production build, TypeScript check, all 55 unit tests, 75 recorded production-browser observations at the requested widths, ABI/export integrity checks and read-only live RPC checks. Existing dependency/build warnings remain; physical wallets and signed transactions were not tested.
 
-The regression suite tests the production export with simulated RPC and injected-wallet states;
-it never broadcasts a transaction. Set `SCOOP_CHROMIUM` to an existing Chromium executable if
-needed. Evidence and screenshots are under `docs/evidence/`; see `docs/validation.md` for results
-and remaining live-wallet limitations. `--reproduce` on the browser script is intended for the
-pre-revision export and records the original defects; use the normal command for the final app.
+Actual commands, results, screenshots, the six-domain Better Interface review and remaining limitations are recorded in [docs/validation.md](../docs/validation.md). The final typography, color tokens, components and responsive rules are documented in [DESIGN.md](../DESIGN.md). Browser fixtures cover front, archive, issue, Book and Trade at 390, 500 and 1440 pixels, with additional 320 and 1024 reflow checks. Read-only public Ethereum results are separate from simulated wallet tests. No real signing or transaction broadcast is part of this verification.
 
-The static `share-card.png` is 1200×630 and uses the existing masthead/paper/ink/red identity.
-`node scripts/share-card.mjs` recreates it using Playwright. OG/Twitter images use the absolute
-`https://scoop.sites.imd.fun/share-card.png`; runtime JavaScript, CSS, issues and ABI URLs remain
-relative for gateway hosting. Both image dimensions and metadata are checked by `check:export`.
-
-
-## Release and validation
-
-The network publishes the committed `dist/` under the existing `scoop.site.identitymd.eth` name
-(`https://scoop.sites.imd.fun/`) after accepting the submission. Do not create a replacement site
-label or deploy contracts. Include source and the existing lockfile with the export; exclude
-installed dependencies, caches and temporary browser profiles.
-
-This revision ran `npm ci`, `npm test` (25 tests), `npm run typecheck`, `npm run build`,
-`npm run manifest`, `npm run check:export`, `node scripts/check-report.mjs` and the expanded browser
-suite. All passed; Vite emits existing dependency annotation and bundle-size warnings. Chromium
-154 checked front page, archive, issue #1, Book and Trade at 390×844 and 1440×900, with 320/768 reflow
-checks. See [validation](../docs/validation.md) for the final evidence and limitations.
-
-In this sandbox the browser connector failed with `Transport closed`. The installed Chromium
-worked with writable XDG directories:
-
-```sh
-XDG_CONFIG_HOME=/tmp/scoop-seat4-chrome-config \
-XDG_CACHE_HOME=/tmp/scoop-seat4-chrome-cache \
-SCOOP_CHROMIUM=/opt/imd-tools/ms-playwright/chromium-1246/chrome-linux64/chrome \
-npm run test:browser
-```
-
-Issue reporting recipes (public reads only):
-
-```sh
-node scripts/report-issue.mjs http://127.0.0.1:39905/rpc/1
-python3 scripts/snapshot-issue.py
-node scripts/check-report.mjs
-```
-
-The loopback RPC is available only on this worker. Elsewhere, explicitly supply an accessible
-Ethereum archive RPC. The first two commands refresh evidence timestamps and do not silently
-rewrite the article. Agent directories expose current data; historical submission reads returned
-HTTP 503 after retries, so no daily agent or acceptance count is published. Keep the original
-edition's committed snapshots when reproducing its arithmetic. Design facts: [DESIGN.md](../DESIGN.md).
+Fonts are self-hosted WOFF2 files in `public/fonts/`: Playfair Display 900, Source Serif 4 regular/semibold/bold and regular italic, and IBM Plex Mono regular/semibold. Their license notices are alongside the files; no font service is contacted at runtime.

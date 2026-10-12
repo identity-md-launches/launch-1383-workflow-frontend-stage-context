@@ -1,11 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { usePool } from '../market';
+import { WalletBar } from './WalletBar';
+import { RetryNotice } from './Feedback';
 import { usePublicClient, useReadContract } from 'wagmi';
-import { encodeAbiParameters, keccak256, maxUint160, zeroAddress } from 'viem';
+import { maxUint160, zeroAddress } from 'viem';
 import { useAppConfig, useNow, useTxRunner, useWallet } from '../hooks';
-import { applySlippage, errorText, fmtAmount, parseAmount, parseSlippage } from '../lib/format';
-import { ERC20_ABI, PERMIT2_ABI, QUOTER_ABI, STATE_VIEW_ABI, UNIVERSAL_ROUTER_ABI, encodeSwapInputs, permit2Expiration, sides, spotFromSqrtPrice } from '../lib/swap';
+import { applySlippage, fmtAmount, fmtNumber, parseAmount, parseSlippage } from '../lib/format';
+import { ERC20_ABI, PERMIT2_ABI, QUOTER_ABI, UNIVERSAL_ROUTER_ABI, encodeSwapInputs, permit2Expiration, sides } from '../lib/swap';
 import { Steps } from './Steps';
-import { CopyAddress } from './Footer';
 
 export function Trade() {
   const cfg = useAppConfig();
@@ -18,9 +21,7 @@ export function Trade() {
   const [side, setSide] = useState<'buy' | 'sell'>('buy');
   const [amountText, setAmountText] = useState('');
   const [slippage, setSlippage] = useState('1');
-  const [quote, setQuote] = useState<{ out: bigint; forIn: bigint } | null>(null);
-  const [quoteError, setQuoteError] = useState<string | null>(null);
-  const [simError, setSimError] = useState<string | null>(null);
+  const pool = usePool();
   const tx = useTxRunner();
 
   const token = cfg.token.address;
@@ -35,38 +36,29 @@ export function Trade() {
   const amountIn = parseAmount(amountText);
   const slippageBps = parseSlippage(slippage);
 
-  const poolId = poolKey ? keccak256(encodeAbiParameters([{ type: 'address' }, { type: 'address' }, { type: 'uint24' }, { type: 'int24' }, { type: 'address' }], [poolKey.currency0, poolKey.currency1, poolKey.fee, poolKey.tickSpacing, poolKey.hooks])) : undefined;
-  const slot0 = useReadContract({ address: net?.uniswapV4.stateView, abi: STATE_VIEW_ABI, functionName: 'getSlot0', args: [poolId!], chainId: cfg.chainId, query: { enabled: !!poolId && !!net, refetchInterval: 30_000 } });
-  const liquidity = useReadContract({ address: net?.uniswapV4.stateView, abi: STATE_VIEW_ABI, functionName: 'getLiquidity', args: [poolId!], chainId: cfg.chainId, query: { enabled: !!poolId && !!net, refetchInterval: 30_000 } });
   const balIn = useReadContract({ address: inAddr, abi: ERC20_ABI, functionName: 'balanceOf', args: [w.address ?? zeroAddress], chainId: cfg.chainId, query: { enabled: !!w.address && inAddr !== zeroAddress, refetchInterval: 30_000 } });
   const balOut = useReadContract({ address: outAddr, abi: ERC20_ABI, functionName: 'balanceOf', args: [w.address ?? zeroAddress], chainId: cfg.chainId, query: { enabled: !!w.address && outAddr !== zeroAddress, refetchInterval: 30_000 } });
   const supply = useReadContract({ address: token, abi: ERC20_ABI, functionName: 'totalSupply', chainId: cfg.chainId });
 
-  // Spot: currency1 per currency0 → express as paired-per-SCOOP.
-  let spot: number | null = null;
-  if (slot0.data && s) { const p = spotFromSqrtPrice(slot0.data[0]); spot = s.tokenIsCurrency0 ? p : 1 / p; }
-
-  useEffect(() => {
-    setQuote(null); setQuoteError(null); setSimError(null);
-    if (!publicClient || !poolKey || !net || amountIn === null) return;
-    let cancelled = false;
-    const t = setTimeout(async () => {
-      try {
-        const r = await publicClient.simulateContract({ address: net.uniswapV4.quoter, abi: QUOTER_ABI, functionName: 'quoteExactInputSingle', args: [{ poolKey, zeroForOne, exactAmount: amountIn, hookData: '0x' }] });
-        if (!cancelled) setQuote({ out: r.result[0], forIn: amountIn });
-      } catch (e) { if (!cancelled) setQuoteError(errorText(e)); }
-    }, 350);
-    return () => { cancelled = true; clearTimeout(t); };
-  }, [publicClient, poolKey, net, amountIn, zeroForOne]);
+  const quoteQuery = useQuery({
+    queryKey: ['swap-quote', cfg.chainId, poolKey, zeroForOne, amountIn?.toString()],
+    enabled: !!publicClient && !!poolKey && !!net && amountIn !== null,
+    queryFn: async () => {
+      if (!publicClient || !poolKey || !net || amountIn === null) throw new Error('Quote unavailable');
+      const r = await publicClient.simulateContract({ address: net.uniswapV4.quoter, abi: QUOTER_ABI, functionName: 'quoteExactInputSingle', args: [{ poolKey, zeroForOne, exactAmount: amountIn, hookData: '0x' }] });
+      return { out: r.result[0], forIn: amountIn, zeroForOne };
+    },
+    refetchInterval: 20_000, staleTime: 0, retry: false,
+  });
+  const quote = quoteQuery.isError ? undefined : quoteQuery.data;
+  const quoteError = quoteQuery.error;
 
   const minOut = quote && slippageBps !== null ? applySlippage(quote.out, slippageBps) : null;
   const canTransact = w.canTransact && tradingEnabled;
   const enough = balIn.data !== undefined && amountIn !== null && balIn.data >= amountIn;
 
   const swap = async () => {
-    if (!canTransact || !w.walletClient || !w.address || !publicClient || !poolKey || !net || amountIn === null || minOut === null || slippageBps === null) return;
-    setSimError(null);
-    const { commands, inputs } = encodeSwapInputs({ poolKey, zeroForOne, amountIn, amountOutMinimum: minOut, extended: net.uniswapV4.extendedSwapParams === true });
+    if (!canTransact || !w.walletClient || !w.address || !publicClient || !poolKey || !net || amountIn === null || minOut === null || slippageBps === null || !enough || tx.running || minOut <= 0n) return;
     const permit2 = net.uniswapV4.permit2, router = net.uniswapV4.universalRouter;
     const expiration = permit2Expiration(now);
     const ok = await tx.run([
@@ -81,13 +73,18 @@ export function Trade() {
         write: () => w.walletClient!.writeContract({ address: permit2, abi: PERMIT2_ABI, functionName: 'approve', args: [inAddr, router, amountIn > maxUint160 ? maxUint160 : amountIn, expiration], chain: w.walletClient!.chain, account: w.address! }),
       },
       {
-        label: `Swap ${fmtAmount(amountIn)} ${inSym} for at least ${fmtAmount(minOut)} ${outSym}`,
+        label: `Swap ${fmtAmount(amountIn)} ${inSym} for ${outSym}`,
         write: async () => {
           const deadline = BigInt(Math.floor(Date.now() / 1000) + 20 * 60);
-          try {
-            const { request } = await publicClient.simulateContract({ address: router, abi: UNIVERSAL_ROUTER_ABI, functionName: 'execute', args: [commands, inputs, deadline], account: w.address!, value: 0n });
-            return await w.walletClient!.writeContract(request);
-          } catch (e) { setSimError(errorText(e)); throw e; }
+          // Approvals can take minutes. Quote once more immediately before simulating the swap.
+          const fresh = await quoteQuery.refetch({ throwOnError: true });
+          if (!fresh.data || fresh.data.out <= 0n || fresh.data.forIn !== amountIn || fresh.data.zeroForOne !== zeroForOne) throw new Error('Quote unavailable');
+          const freshMinimum = applySlippage(fresh.data.out, slippageBps);
+          // Never weaken the minimum the reader accepted before signing approvals.
+          const floor = freshMinimum > minOut ? freshMinimum : minOut;
+          const { commands, inputs } = encodeSwapInputs({ poolKey, zeroForOne, amountIn, amountOutMinimum: floor, extended: net.uniswapV4.extendedSwapParams === true });
+          const { request } = await publicClient.simulateContract({ address: router, abi: UNIVERSAL_ROUTER_ABI, functionName: 'execute', args: [commands, inputs, deadline], account: w.address!, value: 0n });
+          return await w.walletClient!.writeContract(request);
         },
       },
     ]);
@@ -103,17 +100,17 @@ export function Trade() {
             {!tradingEnabled && <p className="notice notice--error" role="alert">Trading is disabled: the deployment configuration has no vetted network block or pool key for this chain.</p>}
             {tradingEnabled && w.isConnected && !w.onChain && <p>Switch to {net!.name} to swap.</p>}
             <div className="row" role="group" aria-label="Direction">
-              <button type="button" className={`btn ${side === 'buy' ? 'btn--primary' : ''}`} aria-pressed={side === 'buy'} onClick={() => setSide('buy')}>Buy SCOOP</button>
-              <button type="button" className={`btn ${side === 'sell' ? 'btn--primary' : ''}`} aria-pressed={side === 'sell'} onClick={() => setSide('sell')}>Sell SCOOP</button>
+              <button type="button" className={`btn ${side === 'buy' ? 'btn--primary' : ''}`} disabled={tx.running} aria-pressed={side === 'buy'} onClick={() => setSide('buy')}>Buy SCOOP</button>
+              <button type="button" className={`btn ${side === 'sell' ? 'btn--primary' : ''}`} disabled={tx.running} aria-pressed={side === 'sell'} onClick={() => setSide('sell')}>Sell SCOOP</button>
             </div>
             <div className="field" style={{ marginTop: '1rem' }}>
               <label htmlFor="amount">You pay ({inSym})</label>
-              <input id="amount" type="text" inputMode="decimal" value={amountText} onChange={(e) => setAmountText(e.target.value)} aria-describedby="amount-hint" autoComplete="off" />
+              <input disabled={tx.running} id="amount" type="text" inputMode="decimal" value={amountText} onChange={(e) => setAmountText(e.target.value)} aria-describedby="amount-hint" autoComplete="off" />
               <span id="amount-hint" className="hint num">{w.address ? `Balance ${fmtAmount(balIn.data)} ${inSym}` : `Amount in ${inSym}, 18 decimals.`}</span>
             </div>
             <div className="field">
               <label htmlFor="slippage">Max slippage (%)</label>
-              <input id="slippage" type="number" min="0" max="50" step="0.1" value={slippage} onChange={(e) => setSlippage(e.target.value)} aria-invalid={slippageBps === null} aria-describedby={slippageBps === null ? 'slippage-error' : undefined} />
+              <input disabled={tx.running} id="slippage" type="number" min="0" max="50" step="0.1" value={slippage} onChange={(e) => setSlippage(e.target.value)} aria-invalid={slippageBps === null} aria-describedby={slippageBps === null ? 'slippage-error' : undefined} />
               {slippageBps === null && <span id="slippage-error" className="error" role="alert">Enter slippage between 0 and 50%.</span>}
             </div>
             <dl className="kv" aria-live="polite">
@@ -121,28 +118,30 @@ export function Trade() {
               <dt>Minimum</dt><dd className="num">{minOut !== null ? `${fmtAmount(minOut)} ${outSym}` : '—'}</dd>
               {w.address && <><dt>Your {outSym}</dt><dd className="num">{fmtAmount(balOut.data)}</dd></>}
             </dl>
-            {quoteError && <p className="notice notice--error">Quote failed: {quoteError}</p>}
-            <button type="button" className="btn btn--accent" disabled={!canTransact || tx.running || !quote || minOut === null || !enough} onClick={() => void swap()}>
+            {quoteError && <RetryNotice retry={quoteQuery.refetch} />}
+            <button type="button" className="btn btn--accent" disabled={!canTransact || tx.running || !quote || minOut === null || minOut <= 0n || !enough} onClick={() => void swap()}>
               {tx.running ? 'Working…' : `Swap ${inSym} for ${outSym}`}
             </button>
+            <WalletBar />
+            {(balIn.error || balOut.error) && <RetryNotice retry={() => Promise.all([balIn.refetch(), balOut.refetch()])} />}
             {tradingEnabled && !w.isConnected && <p>Connect a wallet to swap. Quotes work without one.</p>}
             <p className="hint" style={{ fontFamily: 'var(--font-sans)' }}>Steps: approve {inSym} to Permit2, allow the router through Permit2, then swap. Steps already satisfied are skipped.</p>
             {w.onChain && amountIn !== null && balIn.data !== undefined && !enough && <p className="error" style={{ fontFamily: 'var(--font-sans)', color: 'var(--red)' }}>Not enough {inSym}.</p>}
-            {simError && <p className="notice notice--error" role="alert">The swap would revert: {simError}</p>}
-            <Steps steps={tx.steps} error={tx.error && !simError ? tx.error : null} />
+            <Steps steps={tx.steps} error={tx.error} retry={swap} />
           </div>
           <div className="trade-details">
             <p className="prose">Swap {pair?.symbol ?? 'the paired currency'} and SCOOP. Pool fee: {poolKey ? (poolKey.fee / 10_000).toFixed(2) : '?'}%.</p>
+            <h3>Inside the pool</h3>
             <dl className="kv">
-              <dt>Spot</dt><dd className="num">{spot === null ? (slot0.isLoading ? 'reading…' : 'unavailable') : `${spot.toPrecision(4)} ${pair?.symbol ?? ''} per SCOOP · ${(1 / spot).toPrecision(4)} SCOOP per ${pair?.symbol ?? ''}`}</dd>
-              <dt>Liquidity</dt><dd className="num">{liquidity.data === undefined ? '—' : liquidity.data.toString()}</dd>
+              <dt>Pool price</dt><dd className="num">{pool.spot === null ? (pool.loading ? 'Reading…' : 'Unavailable') : `${fmtNumber(1 / pool.spot)} SCOOP per ${pair?.symbol ?? 'IMD'}`}</dd>
+              <dt>Per SCOOP</dt><dd className="num">{pool.spot === null ? '—' : `${fmtNumber(pool.spot)} ${pair?.symbol ?? 'IMD'}`}</dd>
+              <dt>Pool reserves</dt><dd className="num">{pool.reserves ? <>{fmtAmount(pool.reserves.scoop)} SCOOP<br />{fmtAmount(pool.reserves.imd)} {pair?.symbol ?? 'IMD'}</> : '—'}</dd>
               <dt>Supply</dt><dd className="num">{fmtAmount(supply.data, 18, 0)} SCOOP</dd>
-              <dt>USD</dt><dd>No USD source on this site; amounts are in {pair?.symbol ?? 'the pair token'} and SCOOP.</dd>
             </dl>
-            <div className="stack" style={{ marginTop: '1rem' }}>
-              <CopyAddress label="SCOOP token" address={token} />
-              {pair && <CopyAddress label={pair.symbol} address={pair.address} />}
-            </div>
+            <p className="legend">Reserves are virtual balances of active liquidity at the current price. They exclude liquidity outside the current range.</p>
+            <p className="legend">Quotes refresh every 20 seconds and again before the swap. The minimum protects your chosen slippage.</p>
+            {pool.error && <RetryNotice retry={pool.retry} />}
+            {supply.error && <RetryNotice retry={supply.refetch} />}
           </div>
         </div>
       </section>
