@@ -26,7 +26,14 @@ export function shortAddress(a: string): string {
   return a.length > 12 ? `${a.slice(0, 6)}…${a.slice(-4)}` : a;
 }
 
-/** Apply slippage in basis points to a quoted output: minimum acceptable amount. */
+/** Validate the displayed 0–50% range before converting to basis points. */
+export function parseSlippage(text: string): number | null {
+  const value = Number(text);
+  return text.trim() !== '' && Number.isFinite(value) && value >= 0 && value <= 50
+    ? Math.round(value * 100) : null;
+}
+
+/** Apply a validated slippage in basis points to a quoted output. */
 export function applySlippage(amountOut: bigint, slippageBps: number): bigint {
   const bps = BigInt(Math.max(0, Math.min(10_000, Math.round(slippageBps))));
   return (amountOut * (10_000n - bps)) / 10_000n;

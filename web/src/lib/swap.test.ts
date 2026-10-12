@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { decodeAbiParameters, decodeFunctionData, encodeFunctionData, type Address } from 'viem';
 import { ACTIONS, COMMAND_V4_SWAP, UNIVERSAL_ROUTER_ABI, encodeSwapInputs, sides, spotFromSqrtPrice } from './swap';
-import { applySlippage, fmtAmount, parseAmount } from './format';
+import { applySlippage, fmtAmount, parseAmount, parseSlippage } from './format';
 
 const poolKey = {
   currency0: '0x7094b1ba79e7eb3fab7caa8aa9b45976cd120807' as Address,
@@ -71,5 +71,13 @@ describe('amounts', () => {
   it('applies slippage in bps', () => {
     expect(applySlippage(10_000n, 50)).toBe(9_950n);
     expect(applySlippage(10_000n, 0)).toBe(10_000n);
+  });
+  it('rejects invalid slippage instead of treating it as zero protection', () => {
+    for (const value of ['', ' ', 'abc', '1garbage', 'NaN', 'Infinity', '1e309', '-1', '50.01', '100']) {
+      expect(parseSlippage(value)).toBeNull();
+    }
+    expect(parseSlippage('0')).toBe(0);
+    expect(parseSlippage('1.2')).toBe(120);
+    expect(parseSlippage('50')).toBe(5000);
   });
 });

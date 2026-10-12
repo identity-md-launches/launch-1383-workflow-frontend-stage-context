@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { usePublicClient, useReadContract } from 'wagmi';
 import { encodeAbiParameters, keccak256, maxUint160, zeroAddress } from 'viem';
 import { useAppConfig, useNow, useTxRunner, useWallet } from '../hooks';
-import { applySlippage, errorText, fmtAmount, parseAmount } from '../lib/format';
+import { applySlippage, errorText, fmtAmount, parseAmount, parseSlippage } from '../lib/format';
 import { ERC20_ABI, PERMIT2_ABI, QUOTER_ABI, STATE_VIEW_ABI, UNIVERSAL_ROUTER_ABI, encodeSwapInputs, permit2Expiration, sides, spotFromSqrtPrice } from '../lib/swap';
 import { Steps } from './Steps';
 import { CopyAddress } from './Footer';
@@ -33,7 +33,7 @@ export function Trade() {
   const outSym = side === 'buy' ? 'SCOOP' : (pair?.symbol ?? '?');
   const zeroForOne = s ? (side === 'sell' ? s.tokenIsCurrency0 : !s.tokenIsCurrency0) : false;
   const amountIn = parseAmount(amountText);
-  const slippageBps = Math.round((parseFloat(slippage) || 0) * 100);
+  const slippageBps = parseSlippage(slippage);
 
   const poolId = poolKey ? keccak256(encodeAbiParameters([{ type: 'address' }, { type: 'address' }, { type: 'uint24' }, { type: 'int24' }, { type: 'address' }], [poolKey.currency0, poolKey.currency1, poolKey.fee, poolKey.tickSpacing, poolKey.hooks])) : undefined;
   const slot0 = useReadContract({ address: net?.uniswapV4.stateView, abi: STATE_VIEW_ABI, functionName: 'getSlot0', args: [poolId!], chainId: cfg.chainId, query: { enabled: !!poolId && !!net, refetchInterval: 30_000 } });
@@ -59,12 +59,12 @@ export function Trade() {
     return () => { cancelled = true; clearTimeout(t); };
   }, [publicClient, poolKey, net, amountIn, zeroForOne]);
 
-  const minOut = quote ? applySlippage(quote.out, slippageBps) : null;
+  const minOut = quote && slippageBps !== null ? applySlippage(quote.out, slippageBps) : null;
   const canTransact = w.onChain && !!w.walletClient && tradingEnabled;
   const enough = balIn.data !== undefined && amountIn !== null && balIn.data >= amountIn;
 
   const swap = async () => {
-    if (!canTransact || !w.walletClient || !w.address || !publicClient || !poolKey || !net || amountIn === null || minOut === null) return;
+    if (!canTransact || !w.walletClient || !w.address || !publicClient || !poolKey || !net || amountIn === null || minOut === null || slippageBps === null) return;
     setSimError(null);
     const { commands, inputs } = encodeSwapInputs({ poolKey, zeroForOne, amountIn, amountOutMinimum: minOut, extended: net.uniswapV4.extendedSwapParams === true });
     const permit2 = net.uniswapV4.permit2, router = net.uniswapV4.universalRouter;
@@ -97,23 +97,9 @@ export function Trade() {
   return (
     <>
       <section className="section" aria-labelledby="trade-h">
-        <p className="section__kicker">Launch pool</p>
         <h2 id="trade-h">Buy &amp; sell SCOOP</h2>
-        <div className="columns columns--main">
-          <div>
-            <p className="prose">SCOOP trades against {pair?.symbol ?? 'its paired currency'} in a Uniswap v4 pool with a {poolKey ? (poolKey.fee / 10_000).toFixed(2) : '?'}% fee. Quotes are simulated through the chain's quoter; the swap is checked for reverts before your wallet is asked to sign.</p>
-            <dl className="kv">
-              <dt>Spot</dt><dd className="num">{spot === null ? (slot0.isLoading ? 'reading…' : 'unavailable') : `${spot.toPrecision(4)} ${pair?.symbol ?? ''} per SCOOP · ${(1 / spot).toPrecision(4)} SCOOP per ${pair?.symbol ?? ''}`}</dd>
-              <dt>Liquidity</dt><dd className="num">{liquidity.data === undefined ? '—' : liquidity.data.toString()}</dd>
-              <dt>Supply</dt><dd className="num">{fmtAmount(supply.data, 18, 0)} SCOOP</dd>
-              <dt>USD</dt><dd>No USD source on this site; amounts are in {pair?.symbol ?? 'the pair token'} and SCOOP.</dd>
-            </dl>
-            <div className="stack" style={{ marginTop: '1rem' }}>
-              <CopyAddress label="SCOOP token" address={token} />
-              {pair && <CopyAddress label={pair.symbol} address={pair.address} />}
-            </div>
-          </div>
-          <div className="card">
+        <div className="columns columns--main trade-columns">
+          <div className="card trade-card">
             {!tradingEnabled && <p className="notice notice--error" role="alert">Trading is disabled: the deployment configuration has no vetted network block or pool key for this chain.</p>}
             {tradingEnabled && !w.isConnected && <p>Connect a wallet to swap. Quotes work without one.</p>}
             {tradingEnabled && w.isConnected && !w.onChain && <p>Switch to {net!.name} to swap.</p>}
@@ -128,7 +114,8 @@ export function Trade() {
             </div>
             <div className="field">
               <label htmlFor="slippage">Max slippage (%)</label>
-              <input id="slippage" type="number" min="0" max="50" step="0.1" value={slippage} onChange={(e) => setSlippage(e.target.value)} />
+              <input id="slippage" type="number" min="0" max="50" step="0.1" value={slippage} onChange={(e) => setSlippage(e.target.value)} aria-invalid={slippageBps === null} aria-describedby={slippageBps === null ? 'slippage-error' : undefined} />
+              {slippageBps === null && <span id="slippage-error" className="error" role="alert">Enter slippage between 0 and 50%.</span>}
             </div>
             <dl className="kv" aria-live="polite">
               <dt>You receive</dt><dd className="num">{quote ? `≈ ${fmtAmount(quote.out)} ${outSym}` : amountIn ? (quoteError ? 'no quote' : 'quoting…') : '—'}</dd>
@@ -143,6 +130,19 @@ export function Trade() {
             {w.onChain && amountIn !== null && balIn.data !== undefined && !enough && <p className="error" style={{ fontFamily: 'var(--font-sans)', color: 'var(--red)' }}>Not enough {inSym}.</p>}
             {simError && <p className="notice notice--error" role="alert">The swap would revert: {simError}</p>}
             <Steps steps={tx.steps} error={tx.error && !simError ? tx.error : null} />
+          </div>
+          <div className="trade-details">
+            <p className="prose">Swap {pair?.symbol ?? 'the paired currency'} and SCOOP. Pool fee: {poolKey ? (poolKey.fee / 10_000).toFixed(2) : '?'}%.</p>
+            <dl className="kv">
+              <dt>Spot</dt><dd className="num">{spot === null ? (slot0.isLoading ? 'reading…' : 'unavailable') : `${spot.toPrecision(4)} ${pair?.symbol ?? ''} per SCOOP · ${(1 / spot).toPrecision(4)} SCOOP per ${pair?.symbol ?? ''}`}</dd>
+              <dt>Liquidity</dt><dd className="num">{liquidity.data === undefined ? '—' : liquidity.data.toString()}</dd>
+              <dt>Supply</dt><dd className="num">{fmtAmount(supply.data, 18, 0)} SCOOP</dd>
+              <dt>USD</dt><dd>No USD source on this site; amounts are in {pair?.symbol ?? 'the pair token'} and SCOOP.</dd>
+            </dl>
+            <div className="stack" style={{ marginTop: '1rem' }}>
+              <CopyAddress label="SCOOP token" address={token} />
+              {pair && <CopyAddress label={pair.symbol} address={pair.address} />}
+            </div>
           </div>
         </div>
       </section>

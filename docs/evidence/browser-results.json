@@ -1,0 +1,106 @@
+{
+  "mode": "regression tests",
+  "browser": "154.0.8037.0",
+  "consoleErrors": [],
+  "resourceFailures": [],
+  "observations": [
+    {
+      "name": "layout 390",
+      "og": "./share-card.png",
+      "inputY": 650.1875,
+      "connectors": [],
+      "overflow": false
+    },
+    {
+      "name": "skip trade 390",
+      "hash": "#/trade",
+      "amount": "1000000",
+      "focus": "main"
+    },
+    {
+      "name": "switch into Ethereum 390",
+      "status": "Connected: 0x1111…1111\nETHEREUM\nDisconnect"
+    },
+    {
+      "name": "slippage 100 390",
+      "enabled": false,
+      "minimum": "—"
+    },
+    {
+      "name": "switch away 390",
+      "status": "Connected: 0x1111…1111\nWRONG NETWORK\nSwitch to Ethereum\nDisconnect",
+      "swapEnabled": false
+    },
+    {
+      "name": "failed bookings 390",
+      "enabled": 0,
+      "ledger": "LEDGER\n\nBookings on the books\n\nEvery booking in the window, past and future. Once a day has ended, anyone can send its held SCOOP to the burn address.\n\nBookings unavailable. Try again.\n\nRetry bookings",
+      "mine": "YOUR BOOKINGS\n\nDays you booked\n\nBookings unavailable. Try again.\n\nRetry bookings"
+    },
+    {
+      "name": "layout 1440",
+      "og": "./share-card.png",
+      "inputY": 565.1875,
+      "connectors": [],
+      "overflow": false
+    },
+    {
+      "name": "skip trade 1440",
+      "hash": "#/trade",
+      "amount": "1000000",
+      "focus": "main"
+    },
+    {
+      "name": "switch into Ethereum 1440",
+      "status": "Connected: 0x1111…1111\nETHEREUM\nDisconnect"
+    },
+    {
+      "name": "slippage 100 1440",
+      "enabled": false,
+      "minimum": "—"
+    },
+    {
+      "name": "switch away 1440",
+      "status": "Connected: 0x1111…1111\nWRONG NETWORK\nSwitch to Ethereum\nDisconnect",
+      "swapEnabled": false
+    },
+    {
+      "name": "failed bookings 1440",
+      "enabled": 0,
+      "ledger": "LEDGER\n\nBookings on the books\n\nEvery booking in the window, past and future. Once a day has ended, anyone can send its held SCOOP to the burn address.\n\nBookings unavailable. Try again.\n\nRetry bookings",
+      "mine": "YOUR BOOKINGS\n\nDays you booked\n\nBookings unavailable. Try again.\n\nRetry bookings"
+    },
+    {
+      "name": "loading",
+      "passed": true
+    },
+    {
+      "name": "slot-error",
+      "passed": true
+    },
+    {
+      "name": "empty",
+      "passed": true
+    },
+    {
+      "name": "discovered wallet and unknown chain",
+      "passed": true
+    },
+    {
+      "name": "responsive 320",
+      "passed": true
+    },
+    {
+      "name": "responsive 390",
+      "passed": true
+    },
+    {
+      "name": "responsive 768",
+      "passed": true
+    },
+    {
+      "name": "responsive 1440",
+      "passed": true
+    }
+  ]
+}

@@ -9,7 +9,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "preview": "vite preview",
     "test": "vitest run",
-    "manifest": "node scripts/manifest.mjs"
+    "manifest": "node scripts/manifest.mjs",
+    "test:browser": "node --experimental-strip-types scripts/browser-test.mjs",
+    "check:export": "node scripts/check-export.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.2",
@@ -22,6 +24,7 @@
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.1",
     "@vitejs/plugin-react": "^5.0.4",
+    "playwright": "^1.64.0",
     "typescript": "^5.9.3",
     "vite": "^7.1.9",
     "vitest": "^3.2.4"

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import { useAccount, useChainId, usePublicClient, useWalletClient } from 'wagmi';
+import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
 import type { Abi, Address, Hash } from 'viem';
 import type { AppConfig } from './config';
 import { ensureChain, type Eip1193Like } from './lib/chain';
@@ -16,13 +16,16 @@ export function useAppConfig(): AppConfig {
 /** Wallet state the whole app reasons about: connected, on the launch chain, can transact. */
 export function useWallet() {
   const cfg = useAppConfig();
-  const { address, isConnected, connector } = useAccount();
-  const chainId = useChainId();
-  const { data: walletClient } = useWalletClient();
+  const { address, isConnected, connector, chainId: walletChain } = useAccount();
+  // useChainId falls back to a configured chain for unsupported networks. Key the client
+  // by the connector's actual chain so a chainChanged event cannot reuse that stale client.
+  const { data: walletClient } = useWalletClient({
+    chainId: walletChain,
+    query: { enabled: isConnected && walletChain === cfg.chainId },
+  });
   const [switching, setSwitching] = useState(false);
   const [switchError, setSwitchError] = useState<string | null>(null);
-  const walletChain = walletClient?.chain?.id;
-  const onChain = isConnected && walletChain === cfg.chainId;
+  const onChain = isConnected && walletChain === cfg.chainId && walletClient?.chain?.id === walletChain && walletClient?.account?.address.toLowerCase() === address?.toLowerCase();
   const switchToLaunchChain = useCallback(async () => {
     if (!connector) return;
     setSwitching(true);
@@ -36,7 +39,7 @@ export function useWallet() {
       setSwitching(false);
     }
   }, [connector, cfg.chainId, cfg.walletAddChain]);
-  return { address, isConnected, chainId, walletChain, onChain, switchToLaunchChain, switching, switchError, walletClient };
+  return { address, isConnected, chainId: walletChain, walletChain, onChain, switchToLaunchChain, switching, switchError, walletClient };
 }
 
 export type StepState = 'idle' | 'pending' | 'mining' | 'done' | 'error' | 'skipped';
@@ -45,7 +48,7 @@ export interface Step { label: string; state: StepState; hash?: Hash; detail?: s
 /** Runs an ordered list of wallet transactions, showing each as its own step with status. */
 export function useTxRunner() {
   const publicClient = usePublicClient();
-  const { data: walletClient } = useWalletClient();
+  const { walletClient, onChain } = useWallet();
   const [steps, setSteps] = useState<Step[]>([]);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +56,7 @@ export function useTxRunner() {
   const run = useCallback(
     async (plan: { label: string; skip?: () => Promise<boolean>; write: () => Promise<Hash> }[]) => {
       if (!walletClient || !publicClient) { setError('Connect a wallet first.'); return false; }
+      if (!onChain) { setError('Switch to the launch network before continuing.'); return false; }
       setRunning(true); setError(null);
       const st: Step[] = plan.map((p) => ({ label: p.label, state: 'idle' }));
       setSteps([...st]);
@@ -78,7 +82,7 @@ export function useTxRunner() {
         setRunning(false);
       }
     },
-    [walletClient, publicClient],
+    [walletClient, publicClient, onChain],
   );
   const reset = useCallback(() => { setSteps([]); setError(null); }, []);
   return { steps, running, error, run, reset };

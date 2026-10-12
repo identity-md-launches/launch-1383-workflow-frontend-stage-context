@@ -32,6 +32,19 @@ export function Book() {
     contracts: (bookedDays.data ?? []).map((d) => ({ address: fp.address, abi: fp.abi, functionName: 'slotOf', args: [BigInt(d)], chainId: cfg.chainId })),
     query: { enabled: (bookedDays.data?.length ?? 0) > 0, refetchInterval: 30_000 },
   });
+  const availabilityKnown = bookedDays.isSuccess && bookedDays.data !== undefined;
+  const slotsFailed = slots.isError || slots.data?.some((r) => r.status === 'failure') === true;
+  const listsFailed = bookedDays.isError || (availabilityKnown && bookedDays.data.length > 0 && slotsFailed);
+  const listsReady = availabilityKnown && (bookedDays.data.length === 0 ||
+    (slots.isSuccess && slots.data?.length === bookedDays.data.length && !slotsFailed));
+  const retrying = bookedDays.isFetching || slots.isFetching;
+  const retryBookings = async () => {
+    await bookedDays.refetch();
+    if ((bookedDays.data?.length ?? 0) > 0) await slots.refetch();
+  };
+  const listStatus = listsFailed
+    ? <div role="status"><p>Bookings unavailable. Try again.</p><button type="button" className="btn" disabled={retrying} onClick={() => void retryBookings()}>{retrying ? 'Retrying…' : 'Retry bookings'}</button></div>
+    : !listsReady ? <p role="status">Reading bookings…</p> : null;
   const slotList = useMemo(() => {
     const list: { day: number; slot: Slot }[] = [];
     (bookedDays.data ?? []).forEach((d, i) => { const r = slots.data?.[i]; if (r && r.status === 'success') list.push({ day: d, slot: r.result as Slot }); });
@@ -48,7 +61,7 @@ export function Book() {
   const [touched, setTouched] = useState(false);
   const tErr = tokenError(token), hErr = headlineError(headline), lErr = linkError(link);
   const dayErr = day === null ? 'Pick a day.' : booked.has(day) ? 'That day is already booked.' : day < win.first || day > win.last ? 'That day is outside the booking window.' : null;
-  const formValid = !tErr && !hErr && !lErr && !dayErr;
+  const formValid = availabilityKnown && !tErr && !hErr && !lErr && !dayErr;
   const tx = useTxRunner();
   const publicClient = usePublicClient();
   const [simError, setSimError] = useState<string | null>(null);
@@ -116,11 +129,12 @@ export function Book() {
         <form onSubmit={(e) => void submit(e)} noValidate>
           <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
             <legend className="field" style={{ marginBottom: 0 }}><span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600 }}>Pick a day (UTC)</span></legend>
-            <p className="legend">Booked days are crossed out. {bookedDays.isLoading ? 'Reading bookings…' : bookedDays.error ? 'Could not read bookings.' : `${days.filter((d) => booked.has(d)).length} of 30 booked.`}</p>
+            <p className="legend" role="status">Booked days are crossed out. {bookedDays.isError ? 'Bookings unavailable. Try again.' : !availabilityKnown ? 'Reading bookings…' : `${days.filter((d) => booked.has(d)).length} of 30 booked.`}</p>
+            {bookedDays.isError && <button type="button" className="btn" disabled={retrying} onClick={() => void retryBookings()}>{retrying ? 'Retrying…' : 'Retry bookings'}</button>}
             <ul className="calendar">
               {days.map((d) => (
                 <li key={d}>
-                  <button type="button" className="day" aria-pressed={day === d} disabled={booked.has(d)} onClick={() => setDay(d)} aria-label={`${longDate(d)}${booked.has(d) ? ', booked' : ''}`}>
+                  <button type="button" className={`day${booked.has(d) ? ' day--booked' : ''}`} aria-pressed={day === d} disabled={!availabilityKnown || booked.has(d)} onClick={() => { if (availabilityKnown) setDay(d); }} aria-label={`${longDate(d)}${!availabilityKnown ? ', availability unknown' : booked.has(d) ? ', booked' : ''}`}>
                     <small>{weekdayShort(d)}</small>{shortDate(d)}
                   </button>
                 </li>
@@ -149,7 +163,7 @@ export function Book() {
             </div>
           </div>
           <div className="row">
-            <button type="submit" className="btn btn--accent" disabled={!canTransact || tx.running || !enough || price.data === undefined}>
+            <button type="submit" className="btn btn--accent" disabled={!canTransact || tx.running || !enough || price.data === undefined || !availabilityKnown}>
               {tx.running ? 'Working…' : day !== null ? `Approve and book ${dayToIso(day)} for ${fmtAmount(needPrice)} SCOOP` : 'Approve and book'}
             </button>
             {tx.steps.length > 0 && !tx.running && <button type="button" className="btn" onClick={tx.reset}>Clear</button>}
@@ -163,23 +177,25 @@ export function Book() {
         <p className="section__kicker">Your bookings</p>
         <h2 id="mine-h">Days you booked</h2>
         {!w.address && <p>Connect a wallet to see your bookings.</p>}
-        {w.address && mine.length === 0 && <p>No bookings from {shortAddress(w.address)} in the last 31 or next 30 days.</p>}
-        {mine.length > 0 && <BookingTable rows={mine} now={now} />}
+        {w.address && listStatus}
+        {w.address && listsReady && mine.length === 0 && <p>No bookings from {shortAddress(w.address)} in the last 31 or next 30 days.</p>}
+        {listsReady && mine.length > 0 && <BookingTable rows={mine} now={now} />}
       </section>
 
       <section className="section" aria-labelledby="burn-h">
         <p className="section__kicker">Ledger</p>
         <h2 id="burn-h">Bookings on the books</h2>
         <p className="prose">Every booking in the window, past and future. Once a day has ended, anyone can send its held SCOOP to the burn address.</p>
-        {slotList.length === 0 && <p>No bookings in the window.</p>}
-        {slotList.length > 0 && <BookingTable rows={slotList} now={now} burnable={burnable} />}
+        {listStatus}
+        {listsReady && slotList.length === 0 && <p>No bookings in the window.</p>}
+        {listsReady && slotList.length > 0 && <BookingTable rows={slotList} now={now} burnable={burnable} />}
       </section>
 
       {(isOwner || isPending) && (
         <section className="section" aria-labelledby="owner-h">
           <p className="section__kicker">Owner</p>
           <h2 id="owner-h">Editor's desk</h2>
-          <OwnerPanel isOwner={isOwner} isPending={isPending} pendingOwner={pendingOwner.data} future={slotList.filter((s) => !dayHasStarted(s.day, now))} onDone={() => { void bookedDays.refetch(); void price.refetch(); void nextPrice.refetch(); void owner.refetch(); void pendingOwner.refetch(); }} />
+          <OwnerPanel isOwner={isOwner} isPending={isPending} pendingOwner={pendingOwner.data} bookingsStatus={listStatus} future={listsReady ? slotList.filter((s) => !dayHasStarted(s.day, now)) : []} onDone={() => { void retryBookings(); void price.refetch(); void nextPrice.refetch(); void owner.refetch(); void pendingOwner.refetch(); }} />
         </section>
       )}
     </>
@@ -225,7 +241,7 @@ function BookingTable({ rows, now, burnable }: { rows: { day: number; slot: Slot
   );
 }
 
-function OwnerPanel({ isOwner, isPending, pendingOwner, future, onDone }: { isOwner: boolean; isPending: boolean; pendingOwner?: Address; future: { day: number; slot: Slot }[]; onDone: () => void }) {
+function OwnerPanel({ isOwner, isPending, pendingOwner, future, bookingsStatus, onDone }: { isOwner: boolean; isPending: boolean; pendingOwner?: Address; future: { day: number; slot: Slot }[]; bookingsStatus: React.ReactNode; onDone: () => void }) {
   const cfg = useAppConfig();
   const w = useWallet();
   const tx = useTxRunner();
@@ -258,7 +274,8 @@ function OwnerPanel({ isOwner, isPending, pendingOwner, future, onDone }: { isOw
           <div className="card">
             <h3>Veto an upcoming booking</h3>
             <p>Only before the day starts. The buyer is refunded in full and the day is freed.</p>
-            {future.length === 0 && <p>No upcoming bookings.</p>}
+            {bookingsStatus}
+            {!bookingsStatus && future.length === 0 && <p>No upcoming bookings.</p>}
             {future.length > 0 && (
               <ul className="steps">
                 {future.map(({ day, slot }) => (

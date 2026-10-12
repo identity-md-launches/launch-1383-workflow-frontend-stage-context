@@ -1,0 +1,92 @@
+{
+  "mode": "before fixes",
+  "browser": "154.0.8037.0",
+  "observations": [
+    {
+      "name": "layout 390",
+      "og": null,
+      "inputY": 1189.1875,
+      "connectors": [
+        "Connect Injected"
+      ],
+      "overflow": false
+    },
+    {
+      "name": "no wallet 390",
+      "error": "Provider not found. Version: @wagmi/core@2.22.1"
+    },
+    {
+      "name": "skip trade 390",
+      "hash": "#main",
+      "amount": null,
+      "focus": "main"
+    },
+    {
+      "name": "switch into Ethereum 390",
+      "status": "Connected: 0x1111…1111\nETHEREUM\nDisconnect"
+    },
+    {
+      "name": "slippage 100 390",
+      "enabled": true,
+      "minimum": "0 SCOOP"
+    },
+    {
+      "name": "invalid plan 390",
+      "steps": "✕\nApprove IMD to Permit2 — error, confirm in wallet\n○\nPermit2: allow the Universal Router to spend IMD — idle\n○\nSwap 1 IMD for at least 0 SCOOP — idle"
+    },
+    {
+      "name": "switch away 390",
+      "status": "Connected: 0x1111…1111\nETHEREUM\nDisconnect",
+      "swapEnabled": true
+    },
+    {
+      "name": "failed bookings 390",
+      "enabled": 30,
+      "ledger": "LEDGER\n\nBookings on the books\n\nEvery booking in the window, past and future. Once a day has ended, anyone can send its held SCOOP to the burn address.\n\nNo bookings in the window.",
+      "mine": "YOUR BOOKINGS\n\nDays you booked\n\nNo bookings from 0x1111…1111 in the last 31 or next 30 days."
+    },
+    {
+      "name": "layout 1440",
+      "og": null,
+      "inputY": 612.6875,
+      "connectors": [
+        "Connect Injected"
+      ],
+      "overflow": false
+    },
+    {
+      "name": "no wallet 1440",
+      "error": "Provider not found. Version: @wagmi/core@2.22.1"
+    },
+    {
+      "name": "skip trade 1440",
+      "hash": "#main",
+      "amount": null,
+      "focus": "main"
+    },
+    {
+      "name": "switch into Ethereum 1440",
+      "status": "Connected: 0x1111…1111\nETHEREUM\nDisconnect"
+    },
+    {
+      "name": "slippage 100 1440",
+      "enabled": true,
+      "minimum": "0 SCOOP"
+    },
+    {
+      "name": "invalid plan 1440",
+      "steps": "✕\nApprove IMD to Permit2 — error, confirm in wallet\n○\nPermit2: allow the Universal Router to spend IMD — idle\n○\nSwap 1 IMD for at least 0 SCOOP — idle"
+    },
+    {
+      "name": "switch away 1440",
+      "status": "Connected: 0x1111…1111\nETHEREUM\nDisconnect",
+      "swapEnabled": true
+    },
+    {
+      "name": "failed bookings 1440",
+      "enabled": 30,
+      "ledger": "LEDGER\n\nBookings on the books\n\nEvery booking in the window, past and future. Once a day has ended, anyone can send its held SCOOP to the burn address.\n\nNo bookings in the window.",
+      "mine": "YOUR BOOKINGS\n\nDays you booked\n\nNo bookings from 0x1111…1111 in the last 31 or next 30 days."
+    }
+  ]
+}

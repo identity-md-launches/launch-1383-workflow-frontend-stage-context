@@ -33,7 +33,12 @@ export function App() {
 
   return (
     <div className="page">
-      <a className="skip" href="#main">Skip to content</a>
+      <a className="skip" href="#main" onClick={(e) => {
+        e.preventDefault();
+        const main = document.getElementById('main');
+        main?.focus({ preventScroll: true });
+        main?.scrollIntoView({ block: 'start' });
+      }}>Skip to content</a>
       <header className="masthead">
         <div className="masthead__ears">
           <span>{longDate(todayIndex())}</span>

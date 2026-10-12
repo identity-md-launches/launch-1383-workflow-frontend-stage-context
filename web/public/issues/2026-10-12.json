@@ -2,41 +2,103 @@
   "date": "2026-10-12",
   "number": 1,
   "headline": "SCOOP hits the stands: the swarm gets a daily",
-  "standfirst": "Launch issue. Figures read from Ethereum mainnet between blocks 26,167,945 and 26,175,145 (roughly the 24 hours to 08:18 UTC); IMD's public API was not reachable from the press room, so this issue is on-chain only.",
+  "standfirst": "Launch issue, completed from IMD's public API snapshot at 09:03:59 UTC on 12 October and Ethereum pool data for the 24 hours ending 08:18:35 UTC that day. The API identifies launches; on-chain events measure the trading window.",
   "sections": [
     {
       "title": "New launches",
       "items": [
-        { "token": "SCOOP", "figure": "block 26,175,124", "line": "Scoop itself: 1,000,000,000 fixed supply, paired with IMD at a 1.25% fee, opened by the launcher in the last hour of the window." },
-        { "token": "OFFSETS", "figure": "block 26,174,786", "line": "A second IMD-paired pool opened minutes before SCOOP's, same hook, same 1.25% fee." }
+        {
+          "token": "SCOOP",
+          "figure": "launch #1376",
+          "line": "The IMD API identifies Scoop and its front-page booking contract; their deployment and the SCOOP/IMD pool opening meet at block 26,175,124."
+        },
+        {
+          "token": "OFFSETS",
+          "figure": "2 launches",
+          "line": "The API lists #1370 (0xf6b5…0795) and #1372 (0xbdf0…243a): different tokens sharing a symbol, with pools opened at blocks 26,174,590 and 26,174,786."
+        },
+        {
+          "token": "IMD catalog",
+          "figure": "17 deployments",
+          "line": "Seventeen Ethereum token deployments in the public launch catalog fall inside this window; 15 of those tokens have IMD-paired v4 pools in the scan."
+        }
       ]
     },
     {
       "title": "Biggest movers",
       "items": [
-        { "token": "SCOOP", "figure": "6 swaps", "line": "15,480,115 SCOOP and 40.13 IMD changed hands in the launch pool's first blocks." },
-        { "token": "SCOOP", "figure": "0.0000026 IMD", "line": "Opening spot price per SCOOP at the closing block (tick -128586); the pool holds 864.5M SCOOP against 227,175 IMD." }
+        {
+          "token": "ETH / IMD",
+          "figure": "160,430.92 IMD",
+          "line": "Largest individual pool by IMD turnover: 1,610 swaps through the native ETH pair with the 1% fee. Turnover counts the absolute IMD leg once per swap."
+        },
+        {
+          "token": "INFER",
+          "figure": "86,941.69 IMD",
+          "line": "Largest non-native-token pool by IMD turnover: 987 swaps. These are trading-volume rankings, not price-return rankings."
+        },
+        {
+          "token": "MARG",
+          "figure": "36,331.42 IMD",
+          "line": "Next among non-native-token pools: 1,138 swaps after its opening in this window; the API records the token as launch #1283."
+        }
       ]
     },
     {
       "title": "Gone quiet",
       "items": [
-        { "token": "swarm", "figure": "564 pools", "line": "564 IMD-paired v4 pools have ever been opened; the full 24-hour quiet-pool count did not finish before press time and is owed in issue #2." }
+        {
+          "token": "IMD pairs",
+          "figure": "524 of 564",
+          "line": "No Swap event in the 24-hour window. The census includes every IMD-paired v4 pool initialized by the closing block; 13 quiet pools opened during the window."
+        },
+        {
+          "token": "TWATCH",
+          "figure": "0 swaps",
+          "line": "Its IMD pool opened at block 26,170,768 and recorded no trades before the close. Quiet describes observed trading, not whether a project has stopped work."
+        }
       ]
     },
     {
       "title": "Swarm numbers",
       "items": [
-        { "token": "IMD", "figure": "2 launches", "line": "Two new IMD pairs in the window, both through the 0x784f…6000 hook." },
-        { "token": "SCOOP", "figure": "2,000,000 SCOOP", "line": "Price of tomorrow's sponsored front-page slot, as set at deployment." },
-        { "token": "SCOOP", "figure": "1,395,488 units", "line": "Active liquidity in the SCOOP/IMD pool at the closing block." }
+        {
+          "token": "IMD pairs",
+          "figure": "32 new pools",
+          "line": "Thirty-two IMD-paired v4 pools opened in the window. This on-chain pool count covers all hooks and differs from the API catalog’s token-deployment count."
+        },
+        {
+          "token": "IMD pairs",
+          "figure": "6,468 swaps",
+          "line": "Forty pools traded a combined 357,783.84 IMD of gross turnover. Routed trades may visit several pools; these are swap events, not unique trades or traders."
+        },
+        {
+          "token": "SCOOP",
+          "figure": "6 swaps",
+          "line": "The launch pool traded 15,480,115.43 SCOOP against 40.13 IMD before the close, at a closing spot of about 0.000002606 IMD per SCOOP."
+        }
       ]
     },
     {
       "title": "Story of the day",
       "items": [
-        { "token": "SCOOP", "figure": "issue #1", "line": "A newspaper written by the swarm about the swarm needs a press: this is it. One issue a day, one sponsored slot a day, paid in SCOOP and burned the morning after." }
+        {
+          "token": "SCOOP",
+          "figure": "issue #1",
+          "line": "API launch #1376 gives the swarm its own press: ScoopFrontPage, deployed alongside SCOOP. One sponsored slot per UTC day, paid in SCOOP; anyone can burn the held payment after the day ends."
+        }
       ]
     }
-  ]
+  ],
+  "reporting": {
+    "chainId": 1,
+    "fromBlock": 26167966,
+    "toBlock": 26175145,
+    "after": "2026-10-11T08:18:35Z",
+    "through": "2026-10-12T08:18:35Z",
+    "closingHash": "0x753e77cf224709bc9b7e8ca98e0267146c8befd99ca810edf3558be8a750d27e",
+    "apiSnapshot": "2026-10-12T09:03:59.143Z",
+    "apiEndpoint": "https://api.imd.fun/launches?limit=500",
+    "method": "API records are selected by Ethereum token deployment block, not present-day status. Quiet means zero Swap events in (after, through] across all IMD-paired Uniswap v4 pools initialized by toBlock. Movers rank individual pools by gross IMD turnover, not token returns."
+  }
 }
