@@ -25,13 +25,15 @@ export function useWallet() {
   });
   const [switching, setSwitching] = useState(false);
   const [switchError, setSwitchError] = useState<string | null>(null);
-  const onChain = isConnected && walletChain === cfg.chainId && walletClient?.chain?.id === walletChain && walletClient?.account?.address.toLowerCase() === address?.toLowerCase();
+  const onChain = isConnected && walletChain === cfg.chainId;
+  const canTransact = onChain && walletClient?.chain?.id === walletChain && walletClient?.account?.address.toLowerCase() === address?.toLowerCase();
   const switchToLaunchChain = useCallback(async () => {
     if (!connector) return;
     setSwitching(true);
     setSwitchError(null);
     try {
       const provider = (await connector.getProvider()) as Eip1193Like;
+      if (!provider) throw new Error('Provider not found');
       await ensureChain(provider, cfg.chainId, cfg.walletAddChain);
     } catch (e) {
       setSwitchError(errorText(e));
@@ -39,7 +41,7 @@ export function useWallet() {
       setSwitching(false);
     }
   }, [connector, cfg.chainId, cfg.walletAddChain]);
-  return { address, isConnected, chainId: walletChain, walletChain, onChain, switchToLaunchChain, switching, switchError, walletClient };
+  return { address, isConnected, chainId: walletChain, walletChain, onChain, canTransact, switchToLaunchChain, switching, switchError, walletClient };
 }
 
 export type StepState = 'idle' | 'pending' | 'mining' | 'done' | 'error' | 'skipped';
@@ -48,7 +50,7 @@ export interface Step { label: string; state: StepState; hash?: Hash; detail?: s
 /** Runs an ordered list of wallet transactions, showing each as its own step with status. */
 export function useTxRunner() {
   const publicClient = usePublicClient();
-  const { walletClient, onChain } = useWallet();
+  const { walletClient, canTransact } = useWallet();
   const [steps, setSteps] = useState<Step[]>([]);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +58,7 @@ export function useTxRunner() {
   const run = useCallback(
     async (plan: { label: string; skip?: () => Promise<boolean>; write: () => Promise<Hash> }[]) => {
       if (!walletClient || !publicClient) { setError('Connect a wallet first.'); return false; }
-      if (!onChain) { setError('Switch to the launch network before continuing.'); return false; }
+      if (!canTransact) { setError('Switch to the launch network before continuing.'); return false; }
       setRunning(true); setError(null);
       const st: Step[] = plan.map((p) => ({ label: p.label, state: 'idle' }));
       setSteps([...st]);
@@ -82,7 +84,7 @@ export function useTxRunner() {
         setRunning(false);
       }
     },
-    [walletClient, publicClient, onChain],
+    [walletClient, publicClient, canTransact],
   );
   const reset = useCallback(() => { setSteps([]); setError(null); }, []);
   return { steps, running, error, run, reset };

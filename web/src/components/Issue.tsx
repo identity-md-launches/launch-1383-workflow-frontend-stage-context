@@ -3,7 +3,10 @@ import { isoToDay, longDate } from '../lib/days';
 
 export interface IssueItem { token: string; figure: string; line: string }
 export interface IssueSection { title: string; items: IssueItem[] }
-export interface Issue { date: string; number: number; headline: string; standfirst?: string; sections: IssueSection[] }
+export interface Issue {
+  date: string; number: number; headline: string; standfirst?: string; sections: IssueSection[];
+  reporting?: { sources?: { title: string; url: string }[]; note?: string };
+}
 export interface IssueIndexEntry { date: string; number: number; headline: string }
 
 export function useIssueIndex() {
@@ -57,6 +60,10 @@ export function IssueBody({ issue }: { issue: Issue }) {
           </section>
         ))}
       </div>
+      {issue.reporting && <aside className="section reporting" aria-label="Reporting sources">
+        {issue.reporting.note && <p>{issue.reporting.note}</p>}
+        <ul>{issue.reporting.sources?.map((source) => <li key={source.url}><a href={source.url} target="_blank" rel="noreferrer">{source.title}</a></li>)}</ul>
+      </aside>}
     </article>
   );
 }

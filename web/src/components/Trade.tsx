@@ -60,7 +60,7 @@ export function Trade() {
   }, [publicClient, poolKey, net, amountIn, zeroForOne]);
 
   const minOut = quote && slippageBps !== null ? applySlippage(quote.out, slippageBps) : null;
-  const canTransact = w.onChain && !!w.walletClient && tradingEnabled;
+  const canTransact = w.canTransact && tradingEnabled;
   const enough = balIn.data !== undefined && amountIn !== null && balIn.data >= amountIn;
 
   const swap = async () => {
@@ -101,7 +101,6 @@ export function Trade() {
         <div className="columns columns--main trade-columns">
           <div className="card trade-card">
             {!tradingEnabled && <p className="notice notice--error" role="alert">Trading is disabled: the deployment configuration has no vetted network block or pool key for this chain.</p>}
-            {tradingEnabled && !w.isConnected && <p>Connect a wallet to swap. Quotes work without one.</p>}
             {tradingEnabled && w.isConnected && !w.onChain && <p>Switch to {net!.name} to swap.</p>}
             <div className="row" role="group" aria-label="Direction">
               <button type="button" className={`btn ${side === 'buy' ? 'btn--primary' : ''}`} aria-pressed={side === 'buy'} onClick={() => setSide('buy')}>Buy SCOOP</button>
@@ -123,10 +122,11 @@ export function Trade() {
               {w.address && <><dt>Your {outSym}</dt><dd className="num">{fmtAmount(balOut.data)}</dd></>}
             </dl>
             {quoteError && <p className="notice notice--error">Quote failed: {quoteError}</p>}
-            <p className="hint" style={{ fontFamily: 'var(--font-sans)' }}>Steps: approve {inSym} to Permit2, allow the router through Permit2, then swap. Steps already satisfied are skipped.</p>
             <button type="button" className="btn btn--accent" disabled={!canTransact || tx.running || !quote || minOut === null || !enough} onClick={() => void swap()}>
               {tx.running ? 'Working…' : `Swap ${inSym} for ${outSym}`}
             </button>
+            {tradingEnabled && !w.isConnected && <p>Connect a wallet to swap. Quotes work without one.</p>}
+            <p className="hint" style={{ fontFamily: 'var(--font-sans)' }}>Steps: approve {inSym} to Permit2, allow the router through Permit2, then swap. Steps already satisfied are skipped.</p>
             {w.onChain && amountIn !== null && balIn.data !== undefined && !enough && <p className="error" style={{ fontFamily: 'var(--font-sans)', color: 'var(--red)' }}>Not enough {inSym}.</p>}
             {simError && <p className="notice notice--error" role="alert">The swap would revert: {simError}</p>}
             <Steps steps={tx.steps} error={tx.error && !simError ? tx.error : null} />

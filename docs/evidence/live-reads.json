@@ -1,33 +1,24 @@
 {
-  "checkedAt": "2026-10-12T09:11:03.622Z",
-  "transport": "worker-provided loopback RPC for chain 1",
+  "checkedAt": "2026-10-12T10:14:13.450Z",
+  "rpc": "http://127.0.0.1:39905/rpc/1",
   "chainId": 1,
-  "blockNumber": "26175407",
-  "blockHash": "0xb2dcb22cc9944cd614f7c451bdc30cbf4e30b6a91ec4b760520a711016e8d8d6",
+  "block": 26175723,
+  "blockHash": "0x76f2948517a457464f070e9baa9972f231473d600274f1635d36ba7b415ebf7a",
+  "blockTimestamp": 1791800051,
   "contracts": [
     {
-      "contract": "LaunchToken",
+      "name": "LaunchToken",
       "address": "0x7094b1ba79e7eb3fab7caa8aa9b45976cd120807",
-      "codeBytes": 1752
+      "codeBytes": 1752,
+      "runtimeKeccak": "0x316462b4c1a90ef2cc65036bee1800381f77a90254ddc85d3455a059dfb2a1af"
     },
     {
-      "contract": "ScoopFrontPage",
+      "name": "ScoopFrontPage",
       "address": "0xa94a5f4d0e737116b2d03133b88c130736e65947",
-      "codeBytes": 5717
+      "codeBytes": 5717,
+      "runtimeKeccak": "0xb8b51c1d30641ae76a3f88548dc33b52efd5dac92226ec2fc62f6081aa0be425"
     }
   ],
-  "price": "2000000000000000000000000",
-  "quotes": [
-    {
-      "zeroForOne": false,
-      "amountIn": "1000000000000000000",
-      "amountOut": "261777667114494343038139"
-    },
-    {
-      "zeroForOne": true,
-      "amountIn": "1000000000000000000000000",
-      "amountOut": "3718664586412606522"
-    }
-  ],
-  "transactionsBroadcast": 0
+  "priceWei": "2000000000000000000000000",
+  "noTransactionsSent": true
 }

@@ -58,7 +58,7 @@ and distinguish later API retrieval time from the historical trading window.
 ## Contract controls
 
 - **Sponsored slot** (front page, above the fold): `slotOf(today)` rendered as plain text.
-- **Book**: calendar of the 30 bookable days (`bookedDays`, booked or unknown days disabled), form validated
+- **Book**: calendar of the 30 bookable days (`bookedDays` plus every `slotOf`, booked or unknown days disabled), form validated
   client-side with the contract's rules, live `price()` / `nextPrice()`, then two wallet steps:
   `approve(frontPage, price)` on SCOOP (skipped when the allowance already suffices) and `book`
   (simulated first; the revert reason is shown instead of asking the wallet).
@@ -85,7 +85,7 @@ cd web
 npm ci                       # Node 22; lockfile is package-lock.json
 npm run typecheck            # tsc --noEmit
 npm test                     # vitest: day math, validation, chain switch, swap encoding, config loader
-npx vite build               # writes ../dist with base ./
+npm run build                # typecheck + production export with base ./
 node scripts/manifest.mjs    # writes ../dist/imd-deployment.json (ABI hash check + SHA-256 of every file)
 npm run check:export         # pinned ABI commit, handoff, network and complete asset inventory
 npx playwright install chromium  # once, for the browser regression suite
@@ -110,6 +110,44 @@ and remaining live-wallet limitations. `--reproduce` on the browser script is in
 pre-revision export and records the original defects; use the normal command for the final app.
 
 The static `share-card.png` is 1200×630 and uses the existing masthead/paper/ink/red identity.
-`node scripts/share-card.mjs` recreates it using Playwright. Relative OG/Twitter image paths work
-under gateway subpaths; an absolute canonical social URL is pending the publisher's chosen URL.
-Regenerate the export and deployment inventory if that metadata changes after publication.
+`node scripts/share-card.mjs` recreates it using Playwright. OG/Twitter images use the absolute
+`https://scoop.sites.imd.fun/share-card.png`; runtime JavaScript, CSS, issues and ABI URLs remain
+relative for gateway hosting. Both image dimensions and metadata are checked by `check:export`.
+
+
+## Release and validation
+
+The network publishes the committed `dist/` under the existing `scoop.site.identitymd.eth` name
+(`https://scoop.sites.imd.fun/`) after accepting the submission. Do not create a replacement site
+label or deploy contracts. Include source and the existing lockfile with the export; exclude
+installed dependencies, caches and temporary browser profiles.
+
+This revision ran `npm ci`, `npm test` (25 tests), `npm run typecheck`, `npm run build`,
+`npm run manifest`, `npm run check:export`, `node scripts/check-report.mjs` and the expanded browser
+suite. All passed; Vite emits existing dependency annotation and bundle-size warnings. Chromium
+154 checked front page, archive, issue #1, Book and Trade at 390×844 and 1440×900, with 320/768 reflow
+checks. See [validation](../docs/validation.md) for the final evidence and limitations.
+
+In this sandbox the browser connector failed with `Transport closed`. The installed Chromium
+worked with writable XDG directories:
+
+```sh
+XDG_CONFIG_HOME=/tmp/scoop-seat4-chrome-config \
+XDG_CACHE_HOME=/tmp/scoop-seat4-chrome-cache \
+SCOOP_CHROMIUM=/opt/imd-tools/ms-playwright/chromium-1246/chrome-linux64/chrome \
+npm run test:browser
+```
+
+Issue reporting recipes (public reads only):
+
+```sh
+node scripts/report-issue.mjs http://127.0.0.1:39905/rpc/1
+python3 scripts/snapshot-issue.py
+node scripts/check-report.mjs
+```
+
+The loopback RPC is available only on this worker. Elsewhere, explicitly supply an accessible
+Ethereum archive RPC. The first two commands refresh evidence timestamps and do not silently
+rewrite the article. Agent directories expose current data; historical submission reads returned
+HTTP 503 after retries, so no daily agent or acceptance count is published. Keep the original
+edition's committed snapshots when reproducing its arithmetic. Design facts: [DESIGN.md](../DESIGN.md).

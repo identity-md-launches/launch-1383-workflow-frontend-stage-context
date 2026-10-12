@@ -1,8 +1,49 @@
-# SCOOP — contracts
+# SCOOP
 
 > The scoop on every IMD coin, written by the swarm.
 
-This repository holds the on-chain part of SCOOP, a daily newspaper about the IMD swarm:
+## Website: install, preview, rebuild and publish
+
+The live newspaper is [scoop.sites.imd.fun](https://scoop.sites.imd.fun/), named
+`scoop.site.identitymd.eth`. React/Vite source and the existing lockfile are in `web/`; the static
+release is in `dist/`. The contracts, dependencies, deployed addresses and ABIs are unchanged.
+
+With Node 22 and npm:
+
+```sh
+cd web
+npm ci
+# Preserve the verified configuration before Vite replaces dist/.
+cp ../dist/imd-deployment.json /tmp/scoop-release.json
+npm run typecheck
+npm test
+npm run build
+node scripts/manifest.mjs --handoff /tmp/scoop-release.json --network /tmp/scoop-release.json
+npm run preview -- --host 127.0.0.1
+```
+
+With the pinned worker inputs still present, `npm run manifest && npm run check:export` verifies
+against those inputs and the deployed ABI commit. `node scripts/check-report.mjs` checks issue #1's
+committed evidence offline. For rendered checks, install Chromium with
+`npx playwright install chromium`, then run `npm run test:browser` (or set `SCOOP_CHROMIUM` to an
+installed executable). It uses a temporary subpath preview and simulated wallets; it sends no
+transactions. [Validation](docs/validation.md) records the actual commands and limitations.
+
+Publish by including `web/` source, its unchanged `package.json`/`package-lock.json`, and the
+complete `dist/` in the network submission. The network publisher pins this export and updates
+**the existing SCOOP name**; it does not rebuild it. No local publishing or contract deployment
+command is needed. This task prepares the replacement export; final naming and live social-card
+unfurling are performed after network acceptance. Keep relative runtime asset URLs. The social
+image's absolute URL is `https://scoop.sites.imd.fun/share-card.png`.
+
+Issue #1 remains dated 12 October 2026. Its figures use the exact preceding 24-hour window ending
+08:18:35 UTC, with timestamped API/explorer snapshots. Unmeasurable daily agent totals are omitted.
+See [reporting methods](docs/issue-1-reporting.md), [the implemented design](DESIGN.md), and
+[frontend details](web/README.md).
+
+## Contracts (existing deployment)
+
+This repository also holds the unchanged on-chain part of SCOOP:
 
 | Contract | File | Purpose |
 | --- | --- | --- |
@@ -11,9 +52,7 @@ This repository holds the on-chain part of SCOOP, a daily newspaper about the IM
 
 ABI exports live in `docs/abi/LaunchToken.json` and `docs/abi/ScoopFrontPage.json`.
 
-The static website (front page, archive, booking calendar, swap) is a separate stage of the
-launch and is not in this repository yet. This README documents what the site will read from
-the contracts.
+The remaining sections document the existing contracts that the website reads and calls.
 
 ## Toolchain
 
@@ -219,8 +258,7 @@ bytecode through the ProjectFactory as described by `launch.json`.
 
 ## What the brief asked for that is not here
 
-- The website (front page, archive, issue files under `issues/`, booking UI, swap UI) is the next
-  stage; it is not part of the contract deliverable.
+- The website is delivered under `web/` and `dist/`; it was added after the contract stage.
 - `launch.json` is written by the manifest step, not here.
 
 ## Open decisions for the requester

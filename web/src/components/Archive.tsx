@@ -5,13 +5,12 @@ export function Archive() {
   const { index, error } = useIssueIndex();
   return (
     <section className="section" aria-labelledby="archive-h">
-      <p className="section__kicker">Archive</p>
       <h2 id="archive-h">Every issue</h2>
       {error && <p className="notice notice--error" role="alert">{error}</p>}
       {index && index.length === 0 && <p>No issues yet.</p>}
       {index && (
         <div className="table-wrap">
-          <table>
+          <table className="archive-table">
             <thead><tr><th scope="col">No.</th><th scope="col">Date</th><th scope="col">Headline</th></tr></thead>
             <tbody>
               {index.map((e) => (
@@ -25,7 +24,7 @@ export function Archive() {
           </table>
         </div>
       )}
-      <p className="legend" style={{ marginTop: '1rem' }}>Issues are JSON files under <code>issues/</code> in the site export, one per UTC day.</p>
+      <p className="legend" style={{ marginTop: '1rem' }}>Choose an issue to read its daily report.</p>
     </section>
   );
 }

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-12T09:03:59.218Z",
+  "generatedAt": "2026-10-12T10:00:49.558Z",
   "chainId": 1,
   "window": {
     "afterTimestamp": 1791706715,
@@ -12,11 +12,11 @@
   },
   "api": {
     "endpoint": "https://api.imd.fun/launches?limit=500",
-    "fetchedAt": "2026-10-12T09:03:59.143Z",
-    "httpDate": "Mon, 12 Oct 2026 09:03:59 GMT",
-    "bodySha256": "f1cac7dc29619602a6e27cbbf7d328bbda7a1a1332bc0e542c76bcd83344bf4c",
-    "count": 475,
-    "returned": 475,
+    "fetchedAt": "2026-10-12T10:00:49.495Z",
+    "httpDate": "Mon, 12 Oct 2026 10:00:49 GMT",
+    "bodySha256": "86bb21511bf80157bbcf1a8a4aef167eac044e12f4737b456543acb67fe392b3",
+    "count": 476,
+    "returned": 476,
     "windowLaunches": [
       {
         "id": "3b82f412-3bdc-49d9-9cb7-c47adf9febcf",

@@ -73,7 +73,7 @@ describe('amounts', () => {
     expect(applySlippage(10_000n, 0)).toBe(10_000n);
   });
   it('rejects invalid slippage instead of treating it as zero protection', () => {
-    for (const value of ['', ' ', 'abc', '1garbage', 'NaN', 'Infinity', '1e309', '-1', '50.01', '100']) {
+    for (const value of ['', ' ', 'abc', '1garbage', 'NaN', 'Infinity', '1e309', '-1', '50.01', '50.00001', '-0.00001', '-Infinity', '1e999', '100']) {
       expect(parseSlippage(value)).toBeNull();
     }
     expect(parseSlippage('0')).toBe(0);

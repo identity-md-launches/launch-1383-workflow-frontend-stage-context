@@ -39,10 +39,13 @@ export function applySlippage(amountOut: bigint, slippageBps: number): bigint {
   return (amountOut * (10_000n - bps)) / 10_000n;
 }
 
+export const NO_WALLET = 'No wallet found. Open this site in a wallet browser or install a browser wallet.';
+
 /** Human readable error from a wallet / viem rejection. */
 export function errorText(e: unknown): string {
   if (!e) return 'Unknown error';
   const any = e as { shortMessage?: string; message?: string; code?: number; cause?: unknown };
+  if (/provider.*not (found|available)|ProviderNotFound/i.test(any.shortMessage ?? any.message ?? '')) return NO_WALLET;
   if (any.code === 4001 || /user rejected|user denied/i.test(any.shortMessage ?? any.message ?? '')) {
     return 'You rejected the request in your wallet.';
   }

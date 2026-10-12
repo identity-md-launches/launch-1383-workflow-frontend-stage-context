@@ -61,12 +61,12 @@ export function Book() {
   const [touched, setTouched] = useState(false);
   const tErr = tokenError(token), hErr = headlineError(headline), lErr = linkError(link);
   const dayErr = day === null ? 'Pick a day.' : booked.has(day) ? 'That day is already booked.' : day < win.first || day > win.last ? 'That day is outside the booking window.' : null;
-  const formValid = availabilityKnown && !tErr && !hErr && !lErr && !dayErr;
+  const formValid = listsReady && !tErr && !hErr && !lErr && !dayErr;
   const tx = useTxRunner();
   const publicClient = usePublicClient();
   const [simError, setSimError] = useState<string | null>(null);
 
-  const canTransact = w.onChain && !!w.walletClient;
+  const canTransact = w.canTransact;
   const needPrice = price.data ?? 0n;
   const enough = balance.data !== undefined && balance.data >= needPrice;
 
@@ -105,11 +105,11 @@ export function Book() {
   return (
     <>
       <section className="section" aria-labelledby="book-h">
-        <p className="section__kicker">Sponsored slot</p>
         <h2 id="book-h">Book the front page</h2>
         <div className="columns columns--main">
           <div>
-            <p className="prose">One sponsored slot per UTC day, from tomorrow up to 30 days ahead, first come first served. The price is pulled in SCOOP when you book and held by the contract. After the day ends anyone can burn it. The owner can veto a booking before its day starts, which refunds you in full.</p>
+            <p className="prose">Reserve one UTC day, up to 30 days ahead. Pay in SCOOP.</p>
+            <details className="booking-rules"><summary>Booking and refund rules</summary><p>First come, first served. Payment is held by the contract. After the day ends, anyone can burn it. The owner can veto a booking before its day starts, refunding you in full.</p></details>
             <dl className="kv">
               <dt>Price today</dt><dd className="num">{price.isLoading ? 'reading…' : price.error ? 'unavailable' : `${fmtAmount(price.data)} SCOOP`}</dd>
               {nextPrice.data && nextPrice.data[1] > BigInt(today) && (<><dt>From {dayToIso(Number(nextPrice.data[1]))}</dt><dd className="num">{fmtAmount(nextPrice.data[0])} SCOOP</dd></>)}
@@ -119,7 +119,7 @@ export function Book() {
             </dl>
           </div>
           <div className="card">
-            {!w.isConnected && <p>Connect a wallet to book. You can browse the calendar without one.</p>}
+            {!w.isConnected && <p>Browse dates; connect a wallet to book.</p>}
             {w.isConnected && !w.onChain && <p>Switch to {cfg.network?.name ?? `chain ${cfg.chainId}`} to book.</p>}
             {w.onChain && !enough && balance.data !== undefined && <p>You hold {fmtAmount(balance.data)} SCOOP; a slot costs {fmtAmount(needPrice)} SCOOP. <a href="#/trade">Buy SCOOP</a>.</p>}
             {w.onChain && enough && <p>Ready: approve, then book. Two wallet confirmations.</p>}
@@ -129,12 +129,12 @@ export function Book() {
         <form onSubmit={(e) => void submit(e)} noValidate>
           <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
             <legend className="field" style={{ marginBottom: 0 }}><span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600 }}>Pick a day (UTC)</span></legend>
-            <p className="legend" role="status">Booked days are crossed out. {bookedDays.isError ? 'Bookings unavailable. Try again.' : !availabilityKnown ? 'Reading bookings…' : `${days.filter((d) => booked.has(d)).length} of 30 booked.`}</p>
-            {bookedDays.isError && <button type="button" className="btn" disabled={retrying} onClick={() => void retryBookings()}>{retrying ? 'Retrying…' : 'Retry bookings'}</button>}
+            <p className="legend" role="status">Booked days are crossed out. {listsFailed ? 'Bookings unavailable. Try again.' : !listsReady ? 'Reading bookings…' : `${days.filter((d) => booked.has(d)).length} of 30 booked.`}</p>
+            {listsFailed && <button type="button" className="btn" disabled={retrying} onClick={() => void retryBookings()}>{retrying ? 'Retrying…' : 'Retry bookings'}</button>}
             <ul className="calendar">
               {days.map((d) => (
                 <li key={d}>
-                  <button type="button" className={`day${booked.has(d) ? ' day--booked' : ''}`} aria-pressed={day === d} disabled={!availabilityKnown || booked.has(d)} onClick={() => { if (availabilityKnown) setDay(d); }} aria-label={`${longDate(d)}${!availabilityKnown ? ', availability unknown' : booked.has(d) ? ', booked' : ''}`}>
+                  <button type="button" className={`day${booked.has(d) ? ' day--booked' : ''}`} aria-pressed={day === d} disabled={!listsReady || booked.has(d)} onClick={() => { if (listsReady) setDay(d); }} aria-label={`${longDate(d)}${!listsReady ? ', availability unknown' : booked.has(d) ? ', booked' : ''}`}>
                     <small>{weekdayShort(d)}</small>{shortDate(d)}
                   </button>
                 </li>
@@ -163,7 +163,7 @@ export function Book() {
             </div>
           </div>
           <div className="row">
-            <button type="submit" className="btn btn--accent" disabled={!canTransact || tx.running || !enough || price.data === undefined || !availabilityKnown}>
+            <button type="submit" className="btn btn--accent" disabled={!canTransact || tx.running || !enough || price.data === undefined || !listsReady}>
               {tx.running ? 'Working…' : day !== null ? `Approve and book ${dayToIso(day)} for ${fmtAmount(needPrice)} SCOOP` : 'Approve and book'}
             </button>
             {tx.steps.length > 0 && !tx.running && <button type="button" className="btn" onClick={tx.reset}>Clear</button>}
@@ -174,7 +174,6 @@ export function Book() {
       </section>
 
       <section className="section" aria-labelledby="mine-h">
-        <p className="section__kicker">Your bookings</p>
         <h2 id="mine-h">Days you booked</h2>
         {!w.address && <p>Connect a wallet to see your bookings.</p>}
         {w.address && listStatus}
@@ -183,7 +182,6 @@ export function Book() {
       </section>
 
       <section className="section" aria-labelledby="burn-h">
-        <p className="section__kicker">Ledger</p>
         <h2 id="burn-h">Bookings on the books</h2>
         <p className="prose">Every booking in the window, past and future. Once a day has ended, anyone can send its held SCOOP to the burn address.</p>
         {listStatus}
@@ -193,7 +191,6 @@ export function Book() {
 
       {(isOwner || isPending) && (
         <section className="section" aria-labelledby="owner-h">
-          <p className="section__kicker">Owner</p>
           <h2 id="owner-h">Editor's desk</h2>
           <OwnerPanel isOwner={isOwner} isPending={isPending} pendingOwner={pendingOwner.data} bookingsStatus={listStatus} future={listsReady ? slotList.filter((s) => !dayHasStarted(s.day, now)) : []} onDone={() => { void retryBookings(); void price.refetch(); void nextPrice.refetch(); void owner.refetch(); void pendingOwner.refetch(); }} />
         </section>
@@ -228,7 +225,7 @@ function BookingTable({ rows, now, burnable }: { rows: { day: number; slot: Slot
                 <td>
                   {state}
                   {burnable && burnSet.has(day) && (
-                    <> <button className="btn btn--small" disabled={!w.onChain || tx.running} onClick={() => void burn(day)} title={w.onChain ? undefined : 'Connect on the launch chain to burn'}>Burn</button></>
+                    <> <button className="btn btn--small" disabled={!w.canTransact || tx.running} onClick={() => void burn(day)} title={w.onChain ? undefined : 'Connect on the launch chain to burn'}>Burn</button></>
                   )}
                 </td>
               </tr>
@@ -256,7 +253,7 @@ function OwnerPanel({ isOwner, isPending, pendingOwner, future, bookingsStatus, 
       {isPending && (
         <div className="card">
           <p>This wallet is the pending owner. Accept to complete the two-step handover.</p>
-          <button className="btn btn--accent" disabled={!w.onChain || tx.running} onClick={() => void tx.run([{ label: 'Accept ownership', write: () => write('acceptOwnership', []) }]).then(onDone)}>Accept ownership</button>
+          <button className="btn btn--accent" disabled={!w.canTransact || tx.running} onClick={() => void tx.run([{ label: 'Accept ownership', write: () => write('acceptOwnership', []) }]).then(onDone)}>Accept ownership</button>
         </div>
       )}
       {isOwner && (
@@ -269,7 +266,7 @@ function OwnerPanel({ isOwner, isPending, pendingOwner, future, bookingsStatus, 
               <input id="newprice" type="text" inputMode="decimal" value={priceText} onChange={(e) => setPriceText(e.target.value)} aria-describedby="newprice-hint" />
               <span id="newprice-hint" className="hint">Whole or decimal SCOOP, for example 1500000.</span>
             </div>
-            <button className="btn btn--primary" disabled={!w.onChain || tx.running || parsed === null} onClick={() => void tx.run([{ label: `Set price to ${fmtAmount(parsed ?? 0n)} SCOOP from tomorrow`, write: () => write('setPrice', [parsed]) }]).then(onDone)}>Schedule price</button>
+            <button className="btn btn--primary" disabled={!w.canTransact || tx.running || parsed === null} onClick={() => void tx.run([{ label: `Set price to ${fmtAmount(parsed ?? 0n)} SCOOP from tomorrow`, write: () => write('setPrice', [parsed]) }]).then(onDone)}>Schedule price</button>
           </div>
           <div className="card">
             <h3>Veto an upcoming booking</h3>
@@ -281,7 +278,7 @@ function OwnerPanel({ isOwner, isPending, pendingOwner, future, bookingsStatus, 
                 {future.map(({ day, slot }) => (
                   <li key={day}>
                     <span><span className="num">{dayToIso(day)}</span> — {slot.headline} — {shortAddress(slot.buyer)}</span>
-                    <button className="btn btn--small" disabled={!w.onChain || tx.running} onClick={() => { if (window.confirm(`Veto ${dayToIso(day)} and refund ${fmtAmount(slot.paid)} SCOOP to ${slot.buyer}?`)) void tx.run([{ label: `Veto ${dayToIso(day)}`, write: () => write('veto', [BigInt(day)]) }]).then(onDone); }}>Veto</button>
+                    <button className="btn btn--small" disabled={!w.canTransact || tx.running} onClick={() => { if (window.confirm(`Veto ${dayToIso(day)} and refund ${fmtAmount(slot.paid)} SCOOP to ${slot.buyer}?`)) void tx.run([{ label: `Veto ${dayToIso(day)}`, write: () => write('veto', [BigInt(day)]) }]).then(onDone); }}>Veto</button>
                   </li>
                 ))}
               </ul>
@@ -295,7 +292,7 @@ function OwnerPanel({ isOwner, isPending, pendingOwner, future, bookingsStatus, 
               <input id="newowner" type="text" value={newOwner} onChange={(e) => setNewOwner(e.target.value)} aria-invalid={!!ownerErr} aria-describedby="newowner-err" placeholder="0x…" />
               {ownerErr && <span id="newowner-err" className="error">{ownerErr}</span>}
             </div>
-            <button className="btn" disabled={!w.onChain || tx.running || !newOwner || !!ownerErr} onClick={() => { if (window.confirm(`Propose ${newOwner} as the new owner?`)) void tx.run([{ label: 'Propose new owner', write: () => write('transferOwnership', [checksum(newOwner)]) }]).then(onDone); }}>Propose new owner</button>
+            <button className="btn" disabled={!w.canTransact || tx.running || !newOwner || !!ownerErr} onClick={() => { if (window.confirm(`Propose ${newOwner} as the new owner?`)) void tx.run([{ label: 'Propose new owner', write: () => write('transferOwnership', [checksum(newOwner)]) }]).then(onDone); }}>Propose new owner</button>
           </div>
         </>
       )}

@@ -1,4 +1,5 @@
 {
+  "testedAt": "2026-10-12T10:24:16.870Z",
   "mode": "regression tests",
   "browser": "154.0.8037.0",
   "consoleErrors": [],
@@ -6,8 +7,13 @@
   "observations": [
     {
       "name": "layout 390",
-      "og": "./share-card.png",
-      "inputY": 650.1875,
+      "og": "https://scoop.sites.imd.fun/share-card.png",
+      "inputY": 518.6875,
+      "swapBottom": 798.6875,
+      "cardY": 416.6875,
+      "detailsY": 989.6875,
+      "cardX": 16,
+      "detailsX": 16,
       "connectors": [],
       "overflow": false
     },
@@ -34,13 +40,18 @@
     {
       "name": "failed bookings 390",
       "enabled": 0,
-      "ledger": "LEDGER\n\nBookings on the books\n\nEvery booking in the window, past and future. Once a day has ended, anyone can send its held SCOOP to the burn address.\n\nBookings unavailable. Try again.\n\nRetry bookings",
-      "mine": "YOUR BOOKINGS\n\nDays you booked\n\nBookings unavailable. Try again.\n\nRetry bookings"
+      "ledger": "Bookings on the books\n\nEvery booking in the window, past and future. Once a day has ended, anyone can send its held SCOOP to the burn address.\n\nBookings unavailable. Try again.\n\nRetry bookings",
+      "mine": "Days you booked\n\nBookings unavailable. Try again.\n\nRetry bookings"
     },
     {
       "name": "layout 1440",
-      "og": "./share-card.png",
-      "inputY": 565.1875,
+      "og": "https://scoop.sites.imd.fun/share-card.png",
+      "inputY": 500.6875,
+      "swapBottom": 786.6875,
+      "cardY": 398.6875,
+      "detailsY": 398.6875,
+      "cardX": 909.328125,
+      "detailsX": 176,
       "connectors": [],
       "overflow": false
     },
@@ -67,11 +78,15 @@
     {
       "name": "failed bookings 1440",
       "enabled": 0,
-      "ledger": "LEDGER\n\nBookings on the books\n\nEvery booking in the window, past and future. Once a day has ended, anyone can send its held SCOOP to the burn address.\n\nBookings unavailable. Try again.\n\nRetry bookings",
-      "mine": "YOUR BOOKINGS\n\nDays you booked\n\nBookings unavailable. Try again.\n\nRetry bookings"
+      "ledger": "Bookings on the books\n\nEvery booking in the window, past and future. Once a day has ended, anyone can send its held SCOOP to the burn address.\n\nBookings unavailable. Try again.\n\nRetry bookings",
+      "mine": "Days you booked\n\nBookings unavailable. Try again.\n\nRetry bookings"
     },
     {
       "name": "loading",
+      "passed": true
+    },
+    {
+      "name": "slot-loading",
       "passed": true
     },
     {
@@ -87,8 +102,28 @@
       "passed": true
     },
     {
+      "name": "missing provider error sanitized",
+      "passed": true
+    },
+    {
+      "name": "immediate network badge book",
+      "passed": true
+    },
+    {
+      "name": "immediate network badge trade",
+      "passed": true
+    },
+    {
+      "name": "hash navigation and archived issue",
+      "passed": true
+    },
+    {
       "name": "responsive 320",
       "passed": true
+    },
+    {
+      "name": "first book action 390",
+      "bottom": 807.6875
     },
     {
       "name": "responsive 390",
@@ -100,6 +135,45 @@
     },
     {
       "name": "responsive 1440",
+      "passed": true
+    },
+    {
+      "name": "rendered contrast",
+      "pairs": [
+        {
+          "selector": "body",
+          "foreground": "rgb(20, 18, 17)",
+          "background": "rgb(246, 241, 231)",
+          "ratio": 16.591278274518256
+        },
+        {
+          "selector": ".field label",
+          "foreground": "rgb(20, 18, 17)",
+          "background": "rgb(255, 253, 248)",
+          "ratio": 18.372720868626125
+        },
+        {
+          "selector": ".field .hint",
+          "foreground": "rgb(109, 103, 98)",
+          "background": "rgb(255, 253, 248)",
+          "ratio": 5.4842492855131315
+        },
+        {
+          "selector": ".nav [aria-current=\"page\"]",
+          "foreground": "rgb(179, 38, 30)",
+          "background": "rgb(246, 241, 231)",
+          "ratio": 5.806453173218449
+        },
+        {
+          "selector": ".trade-card > .btn--accent",
+          "foreground": "rgb(255, 255, 255)",
+          "background": "rgb(179, 38, 30)",
+          "ratio": 6.536488984854359
+        }
+      ]
+    },
+    {
+      "name": "200% text enlargement trade",
       "passed": true
     }
   ]

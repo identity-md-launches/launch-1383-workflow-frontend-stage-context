@@ -1,132 +1,154 @@
-# SCOOP revision validation
+# SCOOP implementation validation
 
-Worker evidence for the eight reported findings. This record supersedes the previous round's
-incomplete reporting and interaction claims; it is not independent network certification.
-Contracts, root build configuration, deployed addresses and ABIs are unchanged. Source remains
-in `web/`, the static export in `dist/`, and documentation in `docs/`. `docs/DESIGN.md` remains the
-design document because the explicit write scope excludes a root `DESIGN.md`.
+Complete for the stated website scope, with the permitted omission of unmeasurable daily agent
+and acceptance totals. This is worker evidence, not independent certification. This record
+supersedes the earlier revision report. No contracts, deployment addresses, ABIs, dependencies,
+lockfiles, protected build configuration, or ignore rules were changed.
 
-## Reporting correction
+## Issue #1: exact window and sources
 
-Issue #1 now uses `https://api.imd.fun/launches?limit=500`, captured at
-**2026-10-12T09:03:59.143Z**, and complete on-chain pool data for
-**(2026-10-11 08:18:35 UTC, 2026-10-12 08:18:35 UTC]**. Inclusive blocks:
-**26,167,966–26,175,145**. The original close is preserved; its approximate opening block was
-four minutes early and is corrected from timestamps. API deployment block numbers select
-historical launches; a later API status is not presented as historical status.
+Issue number **1** and date **2026-10-12** are preserved. The standfirst now names the window,
+api.imd.fun, explorer.imd.fun, Ethereum logs, and snapshot capture times. The interval is
+**(2026-10-11 08:18:35 UTC, 2026-10-12 08:18:35 UTC]**: exactly 86,400 seconds, inclusive blocks
+**26,167,966–26,175,145**. The close is the existing edition's close, not the current block.
+Closing hash: `0x753e77cf224709bc9b7e8ca98e0267146c8befd99ca810edf3558be8a750d27e`.
 
-Results: **524 quiet / 564 total pools**, 40 active pools, 6,468 swaps, 32 newly initialized pools,
-and 17 Ethereum token deployments in the API catalog during this window. All hooks and both
-currency orderings are covered. The article distinguishes pool counts, catalog deployments and
-IMD turnover. Full endpoints, definitions, closing hash, calculation and reproduction command:
-[issue-1-reporting.md](issue-1-reporting.md). Original API bytes and per-pool integer results/query
-coverage are retained in `docs/evidence/issue-1-*.json`. The snapshot hash, complete per-pool range
-coverage and all article aggregates were checked locally. No partial-window count is used.
-
-## Finding dispositions and rechecks
-
-The production export from the accepted commit was served under a `/preview/` subpath before
-editing. Reproduction used Chromium 154.0.8037.0 at 390×844 and 1440×900, with JSON-RPC and
-EIP-1193 fixtures (no real wallet or funds). Recorded observations:
-[evidence/reproduction.json](evidence/reproduction.json). All eight findings were addressed:
-
-| Finding ID prefix | Source | Reproduced behavior → correction and recheck |
+| Endpoint | Successful request → receipt (UTC, 12 October 2026) | Evidence |
 | --- | --- | --- |
-| `05f6bdbb` (high) | `web/public/issues/2026-10-12.json:5` | Original standfirst admitted no API reporting; Gone quiet substituted the lifetime count. Completed API + exact-window reporting and replaced every affected figure. Final home/issue renders the measured 524-of-564 result. |
-| `db484b7e` | `web/index.html:11` | `og:image` was absent. Added a 1200×630 PNG, OG/Twitter image metadata and alt text. Browser resolves the relative image to an exported PNG; it is included in the regenerated asset hashes. Actual social-service unfurl is pending publication. |
-| `bbbd86cd` | `web/src/App.tsx:36` | Skip changed `#/trade` to `#main` and destroyed amount input. Handler prevents default navigation and focuses/scrolls `main`. Keyboard Enter now preserves trade/book/archive routes, trade amount and booking headline. |
-| `ffc3a2ea` | `web/src/components/Trade.tsx:36,62,67,117`; `web/src/lib/format.ts:33` | 100% produced zero minimum and an enabled swap/approval plan. Finite 0–50% validation is applied before minimum calculation and in the handler. Invalid, negative, empty and overflowing values show the specified inline error, `aria-invalid`, no minimum and no executable plan. 0, 1 and 50 remain valid. |
-| `91cd6df7` | `web/src/components/Book.tsx:35,132,179,191` | RPC errors left 30 selectable days and false empty ledger/own-booking copy. Separate availability and slot-read status gates now disable unknown days, show loading/error states and Retry bookings. Error fixture: 0 enabled days; retry recovers to 29 available/1 booked. Individual slot failures never become empty lists; a successful empty response does. The owner's booking list uses the same status. |
-| `4d15b1be` | `web/src/hooks.ts:19,22,28,51` | Switching away to chain 10 reproduced an Ethereum badge and enabled Swap. The report's initial-switch failure did not occur in this fixture, but the stale-client root cause did. Use `useAccount().chainId` to key the wallet-client query and require an actual chain/client/account match. Both trade and booking gates now disable when switching away and recover when switching back without remounting. |
-| `01409bc9` | `web/src/components/Trade.tsx:98,101,134`; `web/src/styles.css:136` | At 390 px the amount field began at y≈1189 with pool details first. The card is now first in DOM/mobile order, at y≈650, with pool details below. Desktop still has details left/card right (input y≈565). Removed the redundant kicker and shortened the intro to the computed pool fee. |
-| `e5dd46d5` | `web/src/components/WalletBar.tsx:16,31,45` | No-provider context offered Connect Injected and returned the raw Provider not found/version error. Provider availability is now checked before offering a connector, generic choice is Connect wallet, named discovered providers retain their name, and missing-provider errors receive actionable guidance. No-provider and named-wallet fixtures pass. |
+| `https://api.imd.fun/launches?limit=500` | 2026-10-12T10:00:49.495Z | Raw response, 476 launch records |
+| `https://api.imd.fun/jobs?limit=500&before=2026-10-12T08%3A18%3A35.001Z` | 2026-10-12T10:09:03.327197+00:00 → 2026-10-12T10:09:03.629892+00:00 | Public field projection + raw-response SHA-256 |
+| `https://api.imd.fun/seats/records` | 2026-10-12T10:09:03.632663+00:00 → 2026-10-12T10:09:03.684377+00:00 | Public field projection + raw-response SHA-256 |
+| `https://api.imd.fun/publications?type=tokens&pageSize=100&page=1` | 2026-10-12T10:09:12.757942+00:00 → 2026-10-12T10:09:13.263352+00:00 | Public field projection + raw-response SHA-256 |
+| `https://api.imd.fun/publications?type=tokens&pageSize=100&page=2` | 2026-10-12T10:09:13.266512+00:00 → 2026-10-12T10:09:19.643490+00:00 | Public field projection + raw-response SHA-256 |
+| `https://api.imd.fun/publications?type=tokens&pageSize=100&page=3` | 2026-10-12T10:09:19.645575+00:00 → 2026-10-12T10:09:26.017178+00:00 | Public field projection + raw-response SHA-256 |
+| `https://api.imd.fun/publications?type=tokens&pageSize=100&page=4` | 2026-10-12T10:09:26.020460+00:00 → 2026-10-12T10:09:31.846001+00:00 | Public field projection + raw-response SHA-256 |
+| `https://explorer.imd.fun/api/search?q=SCOOP&part=published` | 2026-10-12T10:09:31.847244+00:00 → 2026-10-12T10:09:32.901611+00:00 | Public field projection + raw-response SHA-256 |
+| `https://explorer.imd.fun/api/activity` | 2026-10-12T10:09:32.901786+00:00 → 2026-10-12T10:09:32.951109+00:00 | Public field projection + raw-response SHA-256 |
+| `https://explorer.imd.fun/api/agents/912` | 2026-10-12T10:09:32.951163+00:00 → 2026-10-12T10:09:32.999090+00:00 | Public field projection + raw-response SHA-256 |
 
-## Build and integrity checks
 
-Commands ran locally on the delivered source/export:
+On-chain data was rerun through the worker-provided **http://127.0.0.1:39905/rpc/1** and checked
+as chain 1. The chain report completed at **2026-10-12T10:00:49.558Z**. PoolManager and IMD
+addresses come from the unchanged deployment/network handoff. The loopback relay is used by
+reporting only; the hosted app retains its configured public RPCs.
 
-| Command | Result |
+Measured results: **524 quiet / 564 total IMD-paired pools**, **40 active**, **6,468 swaps**,
+**32 new pools**, **357,783.843549168552202752 IMD** gross turnover; **17 Ethereum token deployments**
+in the launch catalog, all identified in the token catalog, with **15** matching IMD pools;
+**327 jobs created** in the same window. Jobs include every public template, including oracle
+panels. Publication and agent-directory lifetime counts are not presented as daily activity.
+
+Sources are retained in `docs/evidence/issue-1-api-snapshot.json` (raw launch response),
+`issue-1-chain-report.json` (per-pool results and every successful query range/topic/count), and
+`issue-1-public-snapshot.json` (selected job, token, agent and explorer fields with source metadata).
+The latter preserves response digests and field projections, not every original response byte.
+The jobs query returned 500 rows and reached 10 October, proving coverage before the opening;
+327 creation timestamps fall inside the window. All four token-catalog pages were read, with
+328 distinct projects. The agent directory snapshot has 956 records. Those two lifetime counts
+are provenance only. Explorer search corroborates SCOOP's published identity; its later
+publication timestamp is not used as the token's launch time. Explorer `/api/agents/912`
+corroborates seat identity and current status, not daily work.
+
+**Permitted omission:** daily active agents and daily accepted submissions could not be measured
+completely. `/seats/records` exposes current totals/lastWorkedAt rather than a historical series;
+multiple `/jobs/:id/submissions` reads returned HTTP 503 `{error: "busy"}` even with bounded
+backoff, including `/jobs/3834bb81-3e9b-4e4b-bfaa-1f0eb74c18bc/submissions`. The incomplete cohort
+harvest was stopped and its partial results are not counted or delivered. There is no invented
+agent total, completion total, lifetime replacement, or promise to finish these in issue #2.
+
+[Reporting methods and reproduction](issue-1-reporting.md) distinguish pools, tokens, jobs,
+turnover and price return. `node web/scripts/check-report.mjs` passed: snapshot digest, exact
+window, all 108 swap query ranges covering every pool without gaps/overlaps, counts/turnover,
+launch-to-token-catalog identity, job timestamps and article figures.
+
+## Requested behavior and tests
+
+| Item | Implementation / source | Actual validation |
+| --- | --- | --- |
+| Issue | `web/public/issues/2026-10-12.json:5`, `web/src/components/Issue.tsx:55` | Measured window/sources, new-job count, linked source note. Offline report arithmetic passed; front/archived issue rendered. |
+| Share card | `web/index.html:12`, `web/public/share-card.png` | Retained the existing inspected 1200×630 paper/ink/red card. OG and Twitter image URLs are now absolute on scoop.sites.imd.fun; summary_large_image. PNG signature, IHDR, copied bytes and metadata checked. |
+| Slippage | `web/src/lib/format.ts:30`, `web/src/components/Trade.tsx:67` | Existing finite 0–50 validation retained and regression coverage expanded. Empty, negative, overflow and >50 values show the exact linked error and disable Swap. Forced clicks produce no wallet plan; boundaries 0/50 work. |
+| Bookings | `web/src/components/Book.tsx:38`, `:137`, `:180`, `:188` | Fixed selection/submit gating to require all needed slot reads as well as bookedDays. Initial loading, delayed slots, global error, per-slot failure, retry, nonempty and successful empty states pass. A forced click cannot select an unknown day. Ledger and wallet list never label failures empty. |
+| Network | `web/src/hooks.ts:22`, `:28` | Badge derives from useAccount chain directly; writes additionally require a matching wallet client/account. A delayed client no longer causes a false Wrong network badge. Tests switch away/back on Book and Trade without remounting, including unsupported chain and add-chain recovery. |
+| No wallet | `web/src/components/WalletBar.tsx:17`, `web/src/lib/format.ts:48` | Providers probed before offering connectors, duplicate provider removed, every button says Connect wallet. No-provider and discovered-wallet fixtures pass; raw missing-provider errors become exact installation guidance, including error-helper tests. |
+| Mobile Trade | `web/src/components/Trade.tsx:102`, `web/src/styles.css:145` | Card first on phone, details below, two desktop columns retained. Required fee intro, no launch kicker. Swap bottom y=798.69 at 390×844; amount y=518.69. |
+| Skip | `web/src/App.tsx:36` | Existing preventDefault + focus + scroll preserved. Keyboard Enter retains trade/book/archive hashes, amount and all booking fields/selected day. |
+
+## Commands and outcomes
+
+Run from `web/` unless stated otherwise:
+
+| Command | Outcome |
 | --- | --- |
-| `npm ci --cache /tmp/scoop-npm-cache --no-audit --no-fund` | Installed from the existing lockfile; then added Playwright as a dev dependency and retained the updated lockfile for submission. Cache stays outside Git. |
-| `npm run typecheck` | Passed (TypeScript). |
-| `npm test` | 5 files, **21 tests passed**: existing chain/config/day/validation/swap coverage plus invalid-slippage boundaries. |
-| `npm run build` | Passed; relative-base Vite export. Nonfatal third-party PURE-comment warnings and the existing >500 kB JS-chunk warning. No dependency or root build rewrite. |
-| `npm run manifest` | 9 assets, **723,828 bytes** excluding the manifest; SHA-256 inventory regenerated after final static build. |
-| `npm run check:export` | Passed: exact handoff identity/contract set, pool key, network and walletAddChain; complete asset inventory/hashes/path limits; both canonical Keccak ABI hashes; ABIs compared with `git show` at deployed source commit `387e2fe049a33d3c33318ef0b6ef86bb5d65506a`. |
-| `npm run test:browser` with `SCOOP_CHROMIUM` pointing to the installed browser | Passed against the final production export; fixtures and screenshots described below. |
+| `npm ci --cache /tmp/scoop-seat4-c5871b7a-npm --no-audit --no-fund` | Passed; existing manifests and lockfile preserved. An initial attempt used a nonwritable pre-existing /tmp cache; switching to this task's cache fixed installation. Existing peer/deprecation warnings remain. |
+| `npm test` | Passed: **6 files, 25 tests**. Existing 21 tests plus 4 wallet-error cases; slippage edge cases expanded. |
+| `npm run typecheck` | Passed. |
+| `npm run build` | Passed after final runtime change. Existing third-party PURE-annotation warnings and >500 kB JS-chunk warning remain; no missing asset/build error. |
+| `npm run manifest` | Passed, all 9 assets inventoried. |
+| `npm run check:export` | Passed: **727,500 asset bytes** excluding the manifest, both canonical ABI hashes, comparison with deployed source commit, exact handoff/network/pool key, complete asset hashes, metadata, 1200×630 PNG and issue byte copy. |
+| `node scripts/report-issue.mjs http://127.0.0.1:39905/rpc/1` | Complete historical chain scan passed; no partial-window count. |
+| `python3 scripts/snapshot-issue.py` | Completed jobs, token catalog, agent directory and explorer snapshot; omitted historical agent metric as described above. |
+| `node scripts/check-report.mjs` | Passed offline arithmetic/provenance checks. |
+| `npm run test:browser` with installed Chromium and writable XDG dirs | Passed production-export fixture checks; details below. |
 | `git diff --check` | Passed. |
 
-The app still loads `imd-deployment.json` and its referenced ABI files at runtime. No secondary
-address/chain map or private RPC value was introduced. Test wallet addresses live only in the
-browser fixture and are not included in the static runtime bundle. Existing offline dependency
-policy is unchanged; no node_modules, package cache, archive mirror or submodule is submitted.
+The supplied browser connector returned **Transport closed**. Local Playwright with Chromium
+**154.0.8037.0** performed the rendered checks. Chromium's first launch failed because its default
+profile/config directory was unwritable; the following task-specific environment succeeded:
 
-Read-only Ethereum verification at block **26,175,407**, using the worker relay: chain 1; deployed
-code lengths 1,752 bytes (LaunchToken) and 5,717 bytes (ScoopFrontPage); price 2,000,000 SCOOP;
-quotes succeeded in both directions. Exact amounts, timestamp and block hash:
-[evidence/live-reads.json](evidence/live-reads.json). This is separate from issue #1's historical
-window. No transaction was broadcast.
+```sh
+XDG_CONFIG_HOME=/tmp/scoop-seat4-chrome-config \
+XDG_CACHE_HOME=/tmp/scoop-seat4-chrome-cache \
+SCOOP_CHROMIUM=/opt/imd-tools/ms-playwright/chromium-1246/chrome-linux64/chrome \
+npm run test:browser
+```
 
-## Browser and interaction coverage
+The foreground harness serves `/preview/index.html` and closes both browser and server. Final
+results and timestamps are in [browser-results.json](evidence/browser-results.json). Zero page or
+console errors and zero failed local asset responses were recorded. Screenshots use fixture
+RPC data and wallets, not live balances/quotes. Front page, archive, issue #1, Book and Trade were
+inspected at **390×844 and 1440×900**; all five also passed document-overflow checks at **320 and
+768px**. Screenshots: `docs/evidence/{front,archive,issue,book,trade}-{390,1440}.png`. A focused
+keyboard view is in `keyboard-trade-390.png`. Each was visually inspected; the archive's broken
+“No.” header was fixed and rechecked. First selectable booking day ends at y=807.69 on the phone.
 
-The supplied browser connector returned `Transport closed`; local Playwright provided the actual
-browser checks. The bounded script owns its HTTP server/browser and closes both on completion.
-The export is served at `/preview/index.html`, exercising relative assets and hash routes.
+Read-only live check at **2026-10-12T10:14:13.450Z**, Ethereum block **26,175,723**: configured token
+and booking contract have code (1,752 and 5,717 bytes), price is 2,000,000 SCOOP. Runtime hashes and
+block hash are in [live-reads.json](evidence/live-reads.json). No transaction was broadcast.
 
-[evidence/browser-results.json](evidence/browser-results.json) records the final assertions and
-measurements. It reports **zero console errors and zero failed local asset responses**. The suite
-checks the following at 390×844 and 1440×900:
+## Better Interface: consolidated six-domain review
 
-- No wallet, available injected wallet and named EIP-6963 discovery; wallet rejection feedback.
-- Wrong-chain → Ethereum → unsupported chain → Ethereum, both trading and booking gates;
-  error 4902 triggers the exact manifest walletAddChain payload, then a successful switch.
-- Quote controls, slippage errors/boundaries, minimum output, disabled actions and a forced click
-  attempt while invalid. A valid approval request is deliberately rejected by the mock provider;
-  the app unlocks and shows the rejection. No signing request leaves the fixture.
-- Keyboard skip activation in trade/book/archive; route and typed input preservation.
-- Booking initial loading, global RPC error, successful empty data, nonempty lists, partial slot
-  failure and retry recovery. Only successful booking reads authorize calendar selection.
-- All four pages at 320, 390, 768 and 1440 CSS px: no horizontal document overflow.
+Applied the pinned guide during implementation and inspected the final export. Design decisions
+are documented from source in [root DESIGN.md](../DESIGN.md); attributions/licenses are retained.
 
-Screenshots of the final front page, trade, booking and archive at 390 and 1440 px are saved under
-`docs/evidence/{front,trade,book,archive}-{390,1440}.png` and were visually inspected. They use
-**fixture chain data**, not live balances/prices. The red outline around `main` on routed pages is
-the existing focus indicator, not a new card border. The 1200×630 share card was inspected too.
-
-## Better Interface review — six domains
-
-Applied the pinned Better Interface and eth-frontend-ux guides to the revised surfaces, retaining
-the accepted paper/ink/red visual direction. Design facts are in [DESIGN.md](DESIGN.md).
-
-| Domain | Coverage | Findings / limits |
+| Domain | Coverage | Findings, correction and evidence |
 | --- | --- | --- |
-| Accessibility | Checked: source, keyboard and rendered UI | Skip now preserves forms; errors are linked to the slippage input; unknown dates are disabled and labelled. Focus ring, labels, native controls and pressed states retained. Screen-reader session, native zoom, forced-colors and full automated accessibility audit not performed. |
-| Layout | Checked: 320/390/768/1440 reflow; mobile and desktop screenshots | Primary trade controls now precede secondary data on phones. Desktop columns retained, addresses wrap, no document overflow. RTL/localization and physical-device layouts not tested; English is the shipped language. |
-| Writing | Checked: revised copy and source | API/time window and quiet/turnover metrics explicit; actionable no-wallet/retry/slippage errors; no claim that unknown availability is empty. No unrelated editorial redesign. |
-| Typography | Checked: source and screenshots | Existing serif headlines/body, sans controls, mono figures retained. Real report text fits mobile and three-column desktop layout. System font fallback varies by device; exact installed face/weight coverage across platforms unverified. |
-| Colors | Checked: source palette and rendered surfaces | Existing hex tokens retained; no gradients or new accent. Text labels supplement error/selection colors. No new pixel-sampled contrast measurement was made; prior token-only contrast estimates are not promoted to rendered measurements. |
-| UI | Checked: relevant states and interactions | Loading/error/empty lists distinct, retry works, chain badges and action gates follow events, provider choices reflect availability. Share metadata points to the local asset. Live social crawler behavior remains unverified. |
+| Accessibility | Checked: source, keyboard, rendered names/states | HIGH: booking enabled while slots were unknown (`Book.tsx:137`); corrected shared readiness gate. Linked slippage error, native disabled states, keyboard skip and native rules disclosure checked. Visible main focus inspected. Screen-reader sessions and forced-colors mode unperformed. |
+| Layout | Checked: five routes, four widths | MEDIUM: controls too low on phone (`styles.css:145`, `Trade.tsx:102`). Two-row navigation, removed repeated wallet prose, action before steps, compact booking rules. Swap/calendar now within first 844px; desktop columns remain. No document overflow. |
+| Writing | Checked: source and rendered states | HIGH: badge called a correct chain wrong while client loaded (`hooks.ts:28`); distinct chain identity and write readiness. Reporting names metric/window/source; failures give retry/install guidance. Redundant kickers and archive implementation jargon removed. |
+| Typography | Checked: source and screenshots | MEDIUM: scattered size values consolidated into six semantic tokens (`styles.css:17`). LOW: archive “No.” split across lines (`Archive.tsx:13`); nowrap on that header. System serif/sans/mono stacks, readable measure and tabular figures preserved. |
+| Colors | Checked: computed rendered pairs | Ink/paper **16.59:1**; ink/surface **18.37:1**; hints/surface **5.48:1**; active red/paper **5.81:1**; white/red action **6.54:1**. All measured text pairs exceed 4.5:1. No blanket certification of every possible focus/background/state. |
+| UI | Checked: primary controls, loading/error/empty/retry | HIGH: calendar/ledger errors could disagree; now share readiness/failure. Provider choices deduplicated. Transaction rejection unlocks the form with clear feedback. No custom dialog, theme switch, icon system or motion sequence is present; those guide topics are not applicable. Existing owner confirmations were not exercised. |
 
-## Completion and limitations
-
-Complete for the revision's worker-delivery scope: eight finding responses, targeted source
-changes, final static export and validation evidence ready for the worker's submission step. No real-wallet transaction, approval,
-booking, owner write, burn or swap was broadcast; mined transaction outcomes and physical wallets
-remain untested. WebKit/Safari, screen readers and native 200% zoom were not tested. RPC data in
-browser tests is mocked; live read/quote evidence is recorded separately. This worker neither
-publishes the site nor runs the control plane's eventual IPFS/named-site checks. Relative social
-image paths await an absolute canonical URL once the publisher chooses the hosted entrypoint.
+A 200% root-font enlargement on Trade passed without horizontal document overflow. Native
+browser 200% zoom, screen readers, physical phones, RTL/localization, live extensions and real
+book/swap/burn/owner transaction completion were **not tested**. Only local fixture signing requests
+were issued and rejected. Both Buy/Sell quotes, client-side archive navigation and recovery after
+rejected booking/swap approvals were exercised. Final IPFS/ENS publication and social-service unfurling happen after
+network acceptance; this task supplies the replacement export for the existing SCOOP name.
 
 
-## Submission boundary
+## Submission integrity and publication
 
-`git add web dist docs` was attempted and refused by the workspace's read-only Git metadata:
-`Unable to create .../.git/index.lock: Read-only file system`. No local commit was created and no
-Git metadata permissions were changed. The network worker must stage/commit the delivered files.
-`.imd-responses.json` exists in the repository root for its revision-response ingestion.
+The candidate tree is approximately **7.24 MB uncompressed**, below **8,388,608 bytes**, including
+source, unchanged dependencies required by the existing contracts, the lockfile, complete static
+export and reporting/browser evidence. No node_modules, package caches, dependency archives or
+submodules are included. No ignore file was changed. The final export uses relative runtime
+asset URLs; only the requested social/canonical URLs are absolute.
 
-A direct candidate-tree check using tracked files plus nonignored new files (excluding deleted
-old bundles and the worker-consumed response JSON) found no out-of-scope changes, no submodules,
-and no dependency/cache archives. The complete candidate tar is about **6.25 MB**, below the
-8,388,608-byte cap; the hosted export is only 723,828 asset bytes plus its manifest. Documentation
-and validation screenshots stay outside the hosted export.
+`git diff --exit-code` passed for `src/`, `script/`, existing contract tests, `docs/abi/`, `lib/`,
+Foundry config/locks/remappings, launch manifest, frontend package/lock/build config, and both
+source/export ABI directories. The existing source-commit comparison also passed. Repository metadata was not edited manually; `.github/`, environment files and deployment
+state were not changed. The network worker records
+the final Git submission; the publisher then updates **scoop.site.identitymd.eth** rather than
+creating another site name. This local run does not claim that the live name has already changed.

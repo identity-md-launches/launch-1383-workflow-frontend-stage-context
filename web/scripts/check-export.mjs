@@ -24,4 +24,15 @@ function walk(dir,base=''){return fs.readdirSync(dir,{withFileTypes:true}).flatM
 const paths=walk(dist).filter(p=>p!=='imd-deployment.json').sort();assert.deepEqual(m.assets.map(a=>a.path).sort(),paths);assert(m.assets.length<=128);assert(paths.includes('index.html'));
 let bytes=0;for(const a of m.assets){safe(a.path);assert(/^[a-f0-9]{64}$/.test(a.sha256));const b=fs.readFileSync(path.join(dist,a.path));assert(b.length<=8388608);bytes+=b.length;assert.equal(createHash('sha256').update(b).digest('hex'),a.sha256,a.path)}
 assert(bytes<32*1024*1024);assert(fs.readFileSync(path.join(dist,'index.html'),'utf8').includes('./assets/'));
+const html=fs.readFileSync(path.join(dist,'index.html'),'utf8');
+assert(html.includes('<title>SCOOP</title>'));
+for(const attribute of ['property="og:image"','name="twitter:image"'])assert(html.includes(`${attribute} content="https://scoop.sites.imd.fun/share-card.png"`));
+assert(html.includes('name="twitter:card" content="summary_large_image"'));
+assert(html.includes('name="description"'));
+assert(html.includes('rel="icon"'));
+const card=fs.readFileSync(path.join(dist,'share-card.png'));
+assert.equal(card.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+assert.equal(card.readUInt32BE(16),1200);assert.equal(card.readUInt32BE(20),630);
+assert(card.equals(fs.readFileSync(new URL('web/public/share-card.png',root))));
+assert(fs.readFileSync(path.join(dist,'issues/2026-10-12.json')).equals(fs.readFileSync(new URL('web/public/issues/2026-10-12.json',root))));
 console.log(`Verified ${m.contracts.length} pinned ABIs, exact handoff/network/pool key, and all ${m.assets.length} assets (${bytes} bytes).`);

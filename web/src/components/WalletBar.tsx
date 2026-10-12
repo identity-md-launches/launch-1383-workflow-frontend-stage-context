@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useConnect, useDisconnect } from 'wagmi';
 import { useAppConfig, useWallet } from '../hooks';
-import { shortAddress } from '../lib/format';
-
-const NO_WALLET = 'No wallet found. Open this site in a wallet browser or install a browser wallet.';
+import { errorText, NO_WALLET, shortAddress } from '../lib/format';
 
 export function WalletBar() {
   const cfg = useAppConfig();
@@ -17,10 +15,18 @@ export function WalletBar() {
     let cancelled = false;
     const check = async () => {
       const results = await Promise.all(connectors.map(async (connector) => {
-        try { return await connector.getProvider() ? connector : null; } catch { return null; }
+        try { return { connector, provider: await connector.getProvider() }; } catch { return null; }
       }));
       if (!cancelled) {
-        setAvailable(results.filter((c): c is (typeof connectors)[number] => c !== null));
+        const providers = new Set<unknown>();
+        const found: typeof connectors[number][] = [];
+        // Prefer a discovered wallet's identity over the generic connector for the same provider.
+        for (const result of results.sort((a, b) => Number(a?.connector.name === 'Injected') - Number(b?.connector.name === 'Injected'))) {
+          if (!result?.provider || providers.has(result.provider)) continue;
+          providers.add(result.provider);
+          found.push(result.connector);
+        }
+        setAvailable(found);
         setChecked(true);
       }
     };
@@ -28,26 +34,29 @@ export function WalletBar() {
     window.addEventListener('ethereum#initialized', check);
     return () => { cancelled = true; window.removeEventListener('ethereum#initialized', check); };
   }, [connectors]);
-  const missingProvider = /provider.*not found|provider.*not available/i.test(connectError?.message ?? '');
 
   return (
     <div className="walletbar" aria-label="Wallet">
       <div className="walletbar__status" aria-live="polite">
-        {!w.isConnected && <span>No wallet connected. Reads use public RPC.</span>}
+        {!w.isConnected && checked && available.length > 0 && <span>Connect to book or trade.</span>}
         {w.isConnected && w.address && (
           <>
             <span>Connected: <a className="mono" href={`${cfg.explorer}/address/${w.address}`} target="_blank" rel="noreferrer" title={w.address}>{shortAddress(w.address)}</a></span>
             {w.onChain ? <span className="badge">{name}</span> : <span className="badge badge--red">Wrong network</span>}
+            {w.onChain && !w.canTransact && <span>Preparing wallet…</span>}
           </>
         )}
       </div>
       <div className="row">
-        {!w.isConnected && checked && available.length === 0 && <span>{NO_WALLET}</span>}
+        {!w.isConnected && checked && available.length === 0 && <span role="status">{NO_WALLET}</span>}
         {!w.isConnected && !checked && <span>Checking for a wallet…</span>}
         {!w.isConnected && available.map((c) => (
-          <button key={c.uid} className="btn btn--primary" disabled={isPending} onClick={() => connect({ connector: c })}>
-            {isPending ? 'Connecting…' : c.name === 'Injected' ? 'Connect wallet' : `Connect ${c.name}`}
+          <div key={c.uid} className="row">
+          {c.name !== 'Injected' && <span>{c.name}</span>}
+          <button className="btn btn--primary" disabled={isPending} title={c.name === 'Injected' ? undefined : c.name} onClick={() => connect({ connector: c })}>
+            {isPending ? 'Connecting…' : 'Connect wallet'}
           </button>
+          </div>
         ))}
         {w.isConnected && !w.onChain && (
           <button className="btn btn--accent" disabled={w.switching} onClick={() => void w.switchToLaunchChain()}>
@@ -56,7 +65,7 @@ export function WalletBar() {
         )}
         {w.isConnected && <button className="btn" onClick={() => disconnect()}>Disconnect</button>}
       </div>
-      {connectError && <p className="notice notice--error" role="alert" style={{ width: '100%' }}>{missingProvider ? NO_WALLET : connectError.message}</p>}
+      {connectError && <p className="notice notice--error" role="alert" style={{ width: '100%' }}>{errorText(connectError)}</p>}
       {w.switchError && <p className="notice notice--error" role="alert" style={{ width: '100%' }}>{w.switchError}</p>}
     </div>
   );
